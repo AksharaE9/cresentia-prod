@@ -1,4 +1,6 @@
 import Course from '../models/Course.js';
+import User from '../models/User.js';
+import Enrollment from '../models/Enrollment.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
 const buildRatings = (course) => {
@@ -90,16 +92,28 @@ const getCourseById = asyncHandler(async (req, res) => {
     if (course.createdBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied. You can only view courses you created.' });
     }
-  } else if (req.user && req.user.role === 'user') {
-    const hasAccess = req.user.assignedCourses.some(
-      assignedCourse => {
-        const assignedId = typeof assignedCourse === 'object' ? assignedCourse._id : assignedCourse;
-        return assignedId.toString() === course._id.toString();
+  } else if (req.user && (req.user.role === 'user' || req.user.role === 'student')) {
+    if (!course.isPublished) {
+      return res.status(403).json({ message: 'This course is not yet published.' });
+    }
+
+    // Auto-enroll student into published course
+    try {
+      await User.findByIdAndUpdate(req.user._id, {
+        $addToSet: { assignedCourses: course._id }
+      });
+      const existingEnrollment = await Enrollment.findOne({
+        student: req.user._id,
+        course: course._id
+      });
+      if (!existingEnrollment) {
+        await Enrollment.create({
+          student: req.user._id,
+          course: course._id
+        });
       }
-    );
-    
-    if (!hasAccess || !course.isPublished) {
-      return res.status(403).json({ message: 'You do not have access to this course. Please contact an administrator.' });
+    } catch (enrollErr) {
+      console.error('Auto-enrollment error:', enrollErr);
     }
   }
 

@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
+import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { createStudentNotification } from './notificationController.js';
 
@@ -36,16 +37,15 @@ const enrollCourse = asyncHandler(async (req, res) => {
       res.status(403);
       throw new Error('You can only access courses you created.');
     }
-  } else if (req.user.role === 'user') {
-    const hasAccess = req.user.assignedCourses.some(
-      id => id.toString() === course._id.toString()
-    );
-    
-    if (!hasAccess) {
-      res.status(403);
-      throw new Error('You do not have access to this course. Please contact an administrator.');
-    }
+  } else if (!course.isPublished && req.user.role !== 'admin') {
+    res.status(403);
+    throw new Error('This course is not yet published.');
   }
+
+  // Ensure course is in student's assignedCourses
+  await User.findByIdAndUpdate(req.user._id, {
+    $addToSet: { assignedCourses: course._id }
+  });
 
   let enrollment = await Enrollment.findOne({
     student: req.user._id,
