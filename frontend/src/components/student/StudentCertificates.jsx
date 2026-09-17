@@ -51,34 +51,68 @@ const StudentCertificates = ({ enrollments = [] }) => {
 
   return (
     <div className="space-y-8">
-      {/* Overview Banner */}
-      <div className="bg-gradient-to-r from-[#0056D2] to-[#002A72] rounded-xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-              <Award className="w-5 h-5 text-amber-300" />
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-200">
-              Crescentia Verified Credentials
-            </span>
+      {/* Overview Banner - Redesigned with Coursera clean aesthetic & high contrast */}
+      <div className="bg-white border border-[#D1D7DC] rounded-xl p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        {/* Top subtle brand accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0056D2] via-[#2A75E5] to-[#B4690E]" />
+
+        <div className="space-y-3 max-w-2xl">
+          <div className="inline-flex items-center gap-2 bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
+            <Award className="w-3.5 h-3.5 text-[#B4690E]" />
+            <span>Crescentia Verified Credentials</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">
+
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1F1F1F]">
             Your Earned Certificates & Awards
           </h2>
-          <p className="text-xs text-blue-100 max-w-xl">
-            Each certificate earned represents proven mastery of course curriculum and successful passing of the final comprehensive assessment. All certificates carry verifiable authenticity.
+
+          <p className="text-xs sm:text-sm text-[#555555] leading-relaxed">
+            Each certificate earned represents proven mastery of course curriculum and successful completion of the final comprehensive assessment. All credentials carry verified authenticity and can be downloaded as official high-resolution PDF documents.
           </p>
+
+          {/* Key trust badges */}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-1 text-xs text-[#555555] font-medium">
+            <span className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#0A8543]" />
+              <span>Verifiable Credential ID</span>
+            </span>
+            <span className="text-[#D1D7DC] hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1.5">
+              <Download className="w-4 h-4 text-[#0056D2]" />
+              <span>Official PDF Export</span>
+            </span>
+            <span className="text-[#D1D7DC] hidden sm:inline">•</span>
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-[#0056D2]" />
+              <span>70%+ Passing Grade Required</span>
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/10 backdrop-blur-xs p-4 rounded-lg shrink-0 border border-white/10">
-          <div className="text-center">
-            <div className="text-3xl font-black text-amber-300">{earnedCertificates.length}</div>
-            <div className="text-[11px] text-blue-100 font-semibold">Earned</div>
+        {/* Right Stats Widget */}
+        <div className="flex items-stretch gap-3 shrink-0 bg-[#F8FAFC] border border-[#E2E8F0] p-3 rounded-xl">
+          <div className="bg-white border border-[#E2E8F0] rounded-lg px-5 py-3.5 text-center min-w-[105px] shadow-2xs">
+            <div className="text-3xl font-black text-[#0056D2]">
+              {earnedCertificates.length}
+            </div>
+            <div className="text-[11px] font-bold text-[#1F1F1F] uppercase tracking-wider mt-0.5">
+              Earned
+            </div>
+            <div className="text-[10px] text-[#0A8543] font-semibold mt-0.5">
+              Unlocked
+            </div>
           </div>
-          <div className="h-8 w-[1px] bg-white/20" />
-          <div className="text-center">
-            <div className="text-3xl font-black text-white">{pendingCertificates.length}</div>
-            <div className="text-[11px] text-blue-100 font-semibold">In Progress</div>
+
+          <div className="bg-white border border-[#E2E8F0] rounded-lg px-5 py-3.5 text-center min-w-[105px] shadow-2xs">
+            <div className="text-3xl font-black text-[#64748B]">
+              {pendingCertificates.length}
+            </div>
+            <div className="text-[11px] font-bold text-[#1F1F1F] uppercase tracking-wider mt-0.5">
+              In Progress
+            </div>
+            <div className="text-[10px] text-[#555555] font-semibold mt-0.5">
+              Ongoing
+            </div>
           </div>
         </div>
       </div>
