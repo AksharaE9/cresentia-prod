@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import api from '../services/api';
 import {
   BookOpen,
   Award,
@@ -30,23 +31,25 @@ import {
   FileText,
   Lock,
   MessageSquare,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  BookMarked
 } from 'lucide-react';
 
 const SAMPLE_CERTIFICATES = {
   'CRES-2026-REACT-9542': {
     id: 'CRES-2026-REACT-9542',
-    recipient: 'Alex Mercer',
-    course: 'Full Stack Web Development (React & Node.js)',
+    recipient: 'Aarav Sharma',
+    course: 'Full-Stack Web Development with React & Node.js',
     issueDate: 'September 12, 2026',
-    score: '96% (Pass with Distinction)',
-    verificationHash: '0x8f2c719e04bd91ae72b6f1208cc910fa728c',
+    score: '96% (Pass with Highest Honors)',
+    verificationHash: '0x8f2d5a3c9b7e14d026a17b8f9e0c3d4a5b6c7d8e',
     issuer: 'Crescentia Academic Standards Board',
     status: 'Verified & Active on Ledger'
   },
-  'CRES-2026-AWS-8821': {
-    id: 'CRES-2026-AWS-8821',
-    recipient: 'Jordan Taylor',
+  'CRES-2026-AWS-1182': {
+    id: 'CRES-2026-AWS-1182',
+    recipient: 'Priya Patel',
     course: 'Cloud Engineering & DevOps Fundamentals (AWS)',
     issueDate: 'September 8, 2026',
     score: '92% (Pass with Distinction)',
@@ -70,6 +73,69 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef(null);
+  const debounceTimerRef = useRef(null);
+
+  // Real-time search with 200ms debounce
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (!trimmed) {
+      setSearchResults([]);
+      setIsSearching(false);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    setIsSearching(true);
+    setShowSearchDropdown(true);
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await api.get('/courses', { params: { q: trimmed } });
+        setSearchResults(res.data || []);
+      } catch (err) {
+        console.error('Real-time search error:', err);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 200);
+
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [searchQuery]);
+
+  // Click outside listener to close search dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchDropdown(false);
+  };
+
+  const handleSelectCourse = (courseId) => {
+    setShowSearchDropdown(false);
+    setSearchQuery('');
+    navigate(`/courses/${courseId}`);
+  };
 
   // Interactive Footer Modals State
   const [activeModal, setActiveModal] = useState(null); // 'about' | 'partners' | 'help' | 'integrity' | 'verify' | 'contact' | 'privacy' | 'terms' | 'security'
@@ -99,8 +165,9 @@ const LandingPage = () => {
   };
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (searchQuery.trim()) {
+      setShowSearchDropdown(false);
       navigate(`/courses?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
       navigate('/courses');
@@ -176,25 +243,141 @@ const LandingPage = () => {
             </button>
           </div>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="What do you want to learn?"
-                className="w-full py-2 rounded-full border border-[#757575] focus:border-[#0056D2] focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 text-sm text-[#1F1F1F] placeholder:text-[#6A6F73] bg-white"
-                style={{ paddingLeft: '1.25rem', paddingRight: '3.25rem' }}
-              />
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#0056D2] text-white flex items-center justify-center hover:bg-[#00419E] transition-colors border-none p-0 cursor-pointer shrink-0"
-              >
-                <Search className="w-4 h-4 text-white" />
-              </button>
-            </div>
-          </form>
+          {/* Search Bar with Real-Time Dropdown */}
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-md relative">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onFocus={() => {
+                    if (searchQuery.trim() && searchResults.length > 0) {
+                      setShowSearchDropdown(true);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setShowSearchDropdown(false);
+                  }}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="What do you want to learn?"
+                  className="w-full py-2 rounded-full border border-[#757575] focus:border-[#0056D2] focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 text-sm text-[#1F1F1F] placeholder:text-[#6A6F73] bg-white transition-all shadow-2xs"
+                  style={{ paddingLeft: '1.25rem', paddingRight: searchQuery ? '5rem' : '3.25rem' }}
+                />
+
+                {/* Action Buttons */}
+                <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {isSearching && (
+                    <Loader2 className="w-4 h-4 text-[#0056D2] animate-spin mr-0.5" />
+                  )}
+
+                  {searchQuery && !isSearching && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="w-6 h-6 rounded-full text-[#757575] hover:text-[#1F1F1F] hover:bg-[#F0F2F5] flex items-center justify-center p-0 border-none bg-transparent cursor-pointer transition-colors"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-8 h-8 rounded-full bg-[#0056D2] text-white flex items-center justify-center hover:bg-[#00419E] transition-colors border-none p-0 cursor-pointer shrink-0 shadow-xs"
+                    title="Search courses"
+                  >
+                    <Search className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Real-time Search Results Dropdown */}
+            {showSearchDropdown && searchQuery.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-[#D1D7DC] overflow-hidden z-50 animate-in fade-in-50 duration-150 text-left">
+                {isSearching ? (
+                  <div className="p-6 text-center text-xs text-[#555555] flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0056D2]" />
+                    <span>Searching courses in real time...</span>
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <div>
+                    <div className="px-4 py-2.5 bg-[#F8FAFC] border-b border-[#E2E8F0] flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#555555]">
+                        Matching Courses ({searchResults.length})
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#0056D2] bg-[#EBF3FF] px-2 py-0.5 rounded">
+                        Live Results
+                      </span>
+                    </div>
+
+                    <div className="max-h-[340px] overflow-y-auto divide-y divide-[#F0F2F5]">
+                      {searchResults.slice(0, 5).map((course) => (
+                        <button
+                          key={course._id}
+                          type="button"
+                          onClick={() => handleSelectCourse(course._id)}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#F5F8FF] transition-colors text-left border-none bg-transparent cursor-pointer group"
+                        >
+                          {course.thumbnail ? (
+                            <img
+                              src={course.thumbnail}
+                              alt={course.title}
+                              className="w-12 h-9 object-cover rounded bg-slate-100 shrink-0 border border-[#E0E0E0]"
+                            />
+                          ) : (
+                            <div className="w-12 h-9 rounded bg-[#EBF3FF] text-[#0056D2] flex items-center justify-center shrink-0">
+                              <BookOpen className="w-5 h-5" />
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs sm:text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors truncate">
+                              {course.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#555555]">
+                              <span className="text-[#0056D2] font-semibold truncate">
+                                {course.category || 'Curriculum'}
+                              </span>
+                              <span>•</span>
+                              <span className="bg-[#E6F4EA] text-[#0A8543] font-semibold px-1.5 py-0.2 rounded text-[10px]">
+                                {course.level || 'Beginner'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <ArrowRight className="w-4 h-4 text-[#A0AEC0] group-hover:text-[#0056D2] group-hover:translate-x-0.5 transition-all shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-2.5 bg-[#F8FAFC] border-t border-[#E2E8F0] text-center">
+                      <button
+                        type="button"
+                        onClick={handleSearch}
+                        className="w-full py-1.5 text-xs font-bold text-[#0056D2] hover:text-[#00419E] bg-transparent border-none cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <span>View all results for "{searchQuery.trim()}"</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center space-y-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                      <Search className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-[#1F1F1F]">
+                      No courses found for "{searchQuery.trim()}"
+                    </p>
+                    <p className="text-[11px] text-[#555555]">
+                      Try searching for "Auth", "Content", "API", or "Backend"
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Clean Navigation Actions */}
           <div className="flex items-center gap-4 shrink-0">
