@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { createStudentNotification } from './notificationController.js';
 
 const calculateProgress = (course, enrollment) => {
   // New module-based calculation
@@ -259,6 +260,25 @@ const submitQuiz = asyncHandler(async (req, res) => {
   }
 
   await enrollment.save();
+
+  // Create personalized notification for student
+  if (percentage >= 70) {
+    await createStudentNotification({
+      recipient: req.user._id,
+      title: '🎉 Assessment Passed & Certificate Unlocked!',
+      message: `Congratulations! You scored ${percentage}% on "${course.title}". Your official Certificate of Completion is now ready to download.`,
+      type: 'certificate_earned',
+      link: '/certificates'
+    });
+  } else {
+    await createStudentNotification({
+      recipient: req.user._id,
+      title: 'Assessment Attempt Recorded',
+      message: `You scored ${percentage}% on "${course.title}". You need 70% to earn your certificate. Review the curriculum lessons and try again!`,
+      type: 'reminder',
+      link: `/courses/${course._id}/assessment`
+    });
+  }
 
   res.json({
     message: 'Quiz submitted',

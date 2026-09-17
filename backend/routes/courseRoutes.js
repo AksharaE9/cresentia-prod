@@ -8,12 +8,12 @@ import {
   addReview,
   categories
 } from '../controllers/courseController.js';
-import { protect, authorizeRoles } from '../middlewares/authMiddleware.js';
+import { protect, optionalAuth, authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protect, listCourses);
-router.get('/search', protect, searchCourses);
+router.get('/', optionalAuth, listCourses);
+router.get('/search', optionalAuth, searchCourses);
 router.get('/categories', categories);
 router.get('/:id', protect, getCourseById);
 router.post('/', protect, authorizeRoles('admin'), createCourse);

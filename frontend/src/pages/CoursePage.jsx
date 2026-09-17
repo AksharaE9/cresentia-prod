@@ -1,12 +1,28 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  ArrowLeft,
+  CheckCircle,
+  PlayCircle,
+  Clock,
+  Award,
+  BookOpen,
+  Check,
+  ChevronRight,
+  FileCheck,
+  AlertCircle,
+  Download,
+  Info,
+  ChevronLeft
+} from 'lucide-react';
 import api from '../services/api';
 
 const CoursePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [course, setCourse] = useState(null);
   const [enrollment, setEnrollment] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -14,12 +30,13 @@ const CoursePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'notes'
+  const [downloadingCert, setDownloadingCert] = useState(false);
 
   const fetchCourse = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
       const { data } = await api.get(`/courses/${id}`);
       setCourse(data);
     } catch (err) {
@@ -31,16 +48,14 @@ const CoursePage = () => {
 
   const fetchEnrollment = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data } = await api.get('/enrollments');
       const found = data.find((e) => e.course?._id === id);
-
       if (found) {
         setEnrollment(found);
-        if (found.completedVideos?.length > 0) {
+        if (found.completedVideos?.length > 0 && course?.videos?.length) {
           const lastCompleted = Math.max(...found.completedVideos);
-          setCurrentVideoIndex(Math.min(lastCompleted + 1, (course?.videos?.length || 1) - 1));
+          setCurrentVideoIndex(Math.min(lastCompleted + 1, course.videos.length - 1));
         }
       }
     } catch (err) {
@@ -58,33 +73,11 @@ const CoursePage = () => {
     }
   }, [course, fetchEnrollment]);
 
-  useEffect(() => {
-    if (!course?.videos || currentVideoIndex >= course.videos.length - 1) return;
-
-    const nextVideo = course.videos[currentVideoIndex + 1];
-    if (nextVideo?.url && !nextVideo.url.includes('drive.google.com')) {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.as = 'video';
-      link.href = nextVideo.url;
-      link.type = 'video/mp4';
-      document.head.appendChild(link);
-
-      return () => {
-        try {
-          document.head.removeChild(link);
-        } catch (e) {
-          // no-op
-        }
-      };
-    }
-  }, [currentVideoIndex, course]);
-
   const handleEnroll = async () => {
     try {
       const { data } = await api.post(`/enrollments/${id}`);
       setEnrollment(data);
-      setMessage('Enrolled successfully! Start learning now.');
+      setMessage('Enrolled successfully! Welcome to the classroom.');
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to enroll');
@@ -94,7 +87,6 @@ const CoursePage = () => {
   const markVideoCompleted = async (videoIndex) => {
     try {
       let currentEnrollment = enrollment;
-
       if (!currentEnrollment) {
         const enrollRes = await api.post(`/enrollments/${id}`);
         currentEnrollment = enrollRes.data;
@@ -105,21 +97,19 @@ const CoursePage = () => {
         videoIndex
       });
       setEnrollment(data);
-      setMessage('Progress saved!');
-      setTimeout(() => setMessage(''), 2000);
+      setMessage('Lesson marked as completed! Progress saved.');
+      setTimeout(() => setMessage(''), 2500);
     } catch (err) {
-      setMessage('Failed to save progress');
+      setMessage('Failed to save lesson progress');
       setTimeout(() => setMessage(''), 3000);
     }
   };
 
   const handleVideoEnd = () => {
     if (!enrollment) return;
-
     if (!enrollment.completedVideos?.includes(currentVideoIndex)) {
       markVideoCompleted(currentVideoIndex);
     }
-
     if (currentVideoIndex < (course?.videos?.length || 0) - 1) {
       setCurrentVideoIndex(currentVideoIndex + 1);
     }
@@ -137,427 +127,393 @@ const CoursePage = () => {
     return { type: 'video', src: video.url.trim() };
   };
 
-  useEffect(() => {
-    if (!course?.videos?.length) {
-      setResolvedDurations({});
-      return;
-    }
-
-    let isCancelled = false;
-
-    const loadDurations = async () => {
-      const durationEntries = await Promise.all(
-        course.videos.map(
-          (video, index) =>
-            new Promise((resolve) => {
-              const source = getVideoSource(video);
-
-              if (source.type !== 'video') {
-                resolve([index, null]);
-                return;
-              }
-
-              const media = document.createElement('video');
-              media.preload = 'metadata';
-              media.src = source.src;
-
-              const cleanup = () => {
-                media.removeAttribute('src');
-                media.load();
-              };
-
-              media.onloadedmetadata = () => {
-                const minutes = Number.isFinite(media.duration) ? Math.max(1, Math.ceil(media.duration / 60)) : null;
-                cleanup();
-                resolve([index, minutes]);
-              };
-
-              media.onerror = () => {
-                cleanup();
-                resolve([index, null]);
-              };
-            })
-        )
+  const handleDownloadCertificate = async () => {
+    try {
+      setDownloadingCert(true);
+      const res = await api.get(`/enrollments/${id}/certificate`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute(
+        'download',
+        `crescentia-certificate-${course.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
       );
-
-      if (!isCancelled) {
-        setResolvedDurations(Object.fromEntries(durationEntries));
-      }
-    };
-
-    loadDurations();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [course]);
-
-  const getDurationLabel = (index) => {
-    const resolvedMinutes = resolvedDurations[index];
-
-    if (typeof resolvedMinutes === 'number') {
-      return `${resolvedMinutes} min`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('Unable to generate certificate PDF. Ensure you passed the assessment with at least 70%.');
+    } finally {
+      setDownloadingCert(false);
     }
-
-    const sourceType = getVideoSource(course?.videos?.[index]).type;
-    if (sourceType === 'drive') {
-      return 'Duration unavailable';
-    }
-
-    return 'Loading duration...';
   };
-
-  const allVideosCompleted = enrollment?.completedVideos?.length === course?.videos?.length;
 
   if (loading) {
     return (
-      <main className="container page">
-        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <div className="loading-spinner">Loading course...</div>
-          <p className="muted" style={{ marginTop: '1rem' }}>Please wait while we load the course content</p>
+      <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-lg border border-[#D1D7DC] text-center space-y-3 max-w-sm">
+          <div className="w-8 h-8 border-3 border-[#0056D2] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-[#1F1F1F]">Loading course classroom...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
-  if (error) {
+  if (error || !course) {
     return (
-      <main className="container page">
-        <div className="card" style={{ padding: '3rem', textAlign: 'center', border: '2px solid #ef4444' }}>
-          <h2 style={{ color: '#dc2626', marginBottom: '1rem' }}>Error Loading Course</h2>
-          <p style={{ marginBottom: '2rem' }}>{error}</p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button onClick={() => navigate('/dashboard')} className="primary-btn">
-              Back to Dashboard
-            </button>
-            <button onClick={fetchCourse} className="ghost-btn">
-              Try Again
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!course) {
-    return (
-      <main className="container page">
-        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <h2 style={{ marginBottom: '1rem' }}>Course Not Found</h2>
-          <p className="muted" style={{ marginBottom: '2rem' }}>
-            The course you're looking for doesn't exist or has been removed.
-          </p>
-          <button onClick={() => navigate('/dashboard')} className="primary-btn">
-            Back to Dashboard
+      <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-lg border border-[#D1D7DC] text-center space-y-4 max-w-md">
+          <AlertCircle className="w-10 h-10 text-red-600 mx-auto" />
+          <h2 className="text-base font-bold text-[#1F1F1F]">Error Loading Classroom</h2>
+          <p className="text-xs text-[#555555]">{error || 'Course not found or unavailable'}</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="coursera-btn-primary inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
-  if (!course.videos || course.videos.length === 0) {
-    return (
-      <main className="container page">
-        <div className="card" style={{ padding: '3rem' }}>
-          <h1>{course.title}</h1>
-          <p>{course.description}</p>
-          <div className="meta-row">
-            <span className="chip">{course.category}</span>
-            <span className="chip">{course.level}</span>
-          </div>
-          <div style={{ marginTop: '2rem', padding: '2rem', background: '#fef3c7', borderRadius: '12px', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '1rem' }}>No Videos Available</h3>
-            <p className="muted">
-              This course doesn't have any video content yet. Please check back later or contact the instructor.
-            </p>
-          </div>
-          <button onClick={() => navigate('/dashboard')} className="ghost-btn" style={{ marginTop: '2rem' }}>
-            Back to Dashboard
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  if (!enrollment && user?.role !== 'admin' && user?.role !== 'instructor') {
-    return (
-      <main className="container page">
-        <div className="card" style={{ padding: '3rem' }}>
-          <h1>{course.title}</h1>
-          <p>{course.description}</p>
-          <div className="meta-row">
-            <span className="chip">{course.category}</span>
-            <span className="chip">{course.level}</span>
-          </div>
-
-          <div style={{ marginTop: '2rem', padding: '2rem', background: '#f0f9ff', borderRadius: '12px', textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Enroll to Start Learning</h3>
-            <p className="muted" style={{ marginBottom: '2rem' }}>
-              Enroll in this course to access {course.videos.length} video lessons and assessments.
-            </p>
-            <button onClick={handleEnroll} className="primary-btn">
-              Enroll Now
-            </button>
-          </div>
-
-          {message && (
-            <div style={{ marginTop: '1rem', padding: '1rem', background: '#d1fae5', borderRadius: '8px' }}>
-              {message}
-            </div>
-          )}
-        </div>
-      </main>
-    );
-  }
-
-  const currentVideo = course.videos[currentVideoIndex];
+  const videos = course.videos || [];
+  const currentVideo = videos[currentVideoIndex] || {};
   const currentSource = getVideoSource(currentVideo);
   const completedCount = enrollment?.completedVideos?.length || 0;
   const progressPercent = enrollment?.progressPercent || 0;
+  const isCurrentCompleted = enrollment?.completedVideos?.includes(currentVideoIndex);
+  const allVideosCompleted = videos.length > 0 && completedCount === videos.length;
+  const hasPassedQuiz = (enrollment?.quizScore || 0) >= 70;
 
   return (
-    <main className="container page">
+    <div className="min-h-screen bg-[#F5F7FA] pb-16">
+      {/* Classroom Top Bar */}
+      <div className="bg-white border-b border-[#D1D7DC] sticky top-16 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-xs font-bold text-[#0056D2] hover:text-[#00419E] flex items-center gap-1 shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+            </button>
+
+            <span className="text-[#D1D7DC] hidden sm:inline">|</span>
+
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-[#F0F2F5] text-[#555555] px-2 py-0.5 rounded shrink-0 hidden md:inline">
+                {course.category || 'Curriculum'}
+              </span>
+              <h1 className="text-sm font-bold text-[#1F1F1F] truncate">
+                {course.title}
+              </h1>
+            </div>
+          </div>
+
+          {/* Progress Pill */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-[11px] font-bold text-[#1F1F1F]">
+                {progressPercent}% Complete
+              </span>
+              <span className="text-[10px] text-[#6A6F73]">
+                {completedCount}/{videos.length} lessons
+              </span>
+            </div>
+            <div className="w-20 sm:w-28 h-2 bg-[#E0E0E0] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#0056D2] rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {message && (
-        <div style={{ padding: '1rem', background: '#d1fae5', borderRadius: '8px', marginBottom: '1rem', textAlign: 'center' }}>
-          {message}
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-4">
+          <div className="p-3 bg-[#E6F4EA] border border-[#A8DAB5] text-[#0A8543] rounded-md text-xs font-semibold flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            <span>{message}</span>
+          </div>
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: '1.5rem', padding: '1.5rem' }}>
-        <h1 style={{ marginBottom: '0.5rem' }}>{course.title}</h1>
-        <p className="muted">{course.description}</p>
-        <div className="meta-row" style={{ marginTop: '1rem' }}>
-          <span className="chip">{course.category}</span>
-          <span className="chip">{course.level}</span>
-          <span>{course.videos.length} videos</span>
-          {course.quizQuestions?.length > 0 && <span>{course.quizQuestions.length} quiz questions</span>}
-        </div>
-
-        {enrollment && (
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                Progress: {completedCount}/{course.videos.length} videos completed
-              </span>
-              <span style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--brand)' }}>
-                {progressPercent}%
-              </span>
-            </div>
-            <div style={{ background: '#e5e7eb', borderRadius: '999px', height: '8px', overflow: 'hidden' }}>
-              <div
-                style={{
-                  background: 'linear-gradient(90deg, var(--brand), var(--accent))',
-                  height: '100%',
-                  width: `${progressPercent}%`,
-                  transition: 'width 0.3s ease'
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
-        <div>
-          <div className="card" style={{ padding: '0', overflow: 'hidden', marginBottom: '1.5rem' }}>
-            {currentSource.type === 'video' ? (
-              <video
-                key={currentSource.src}
-                controls
-                preload="metadata"
-                poster={currentVideo.thumbnailUrl || course.thumbnail || undefined}
-                style={{ width: '100%', aspectRatio: '16/9', background: '#000' }}
-                onEnded={handleVideoEnd}
-                src={currentSource.src}
-              >
-                Your browser does not support the video tag.
-              </video>
-            ) : currentSource.type === 'drive' ? (
-              <iframe
-                key={currentSource.src}
-                src={currentSource.src}
-                title={currentVideo.title}
-                style={{ width: '100%', aspectRatio: '16/9', border: 0, background: '#000' }}
-                allow="autoplay"
-              />
-            ) : (
-              <div style={{ width: '100%', aspectRatio: '16/9', background: '#1f2937', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
-                <div style={{ textAlign: 'center', padding: '2rem' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📹</div>
-                  <div>Video not available</div>
+      {/* Main Classroom Layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Left 2 Cols: Theater Video Player & Lesson Notes */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Video Frame */}
+            <div className="bg-black rounded-lg overflow-hidden shadow-md aspect-video relative flex items-center justify-center">
+              {currentSource.type === 'video' ? (
+                <video
+                  key={currentSource.src}
+                  controls
+                  preload="metadata"
+                  poster={currentVideo.thumbnailUrl || course.thumbnail || undefined}
+                  className="w-full h-full object-contain"
+                  onEnded={handleVideoEnd}
+                  src={currentSource.src}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : currentSource.type === 'drive' ? (
+                <iframe
+                  key={currentSource.src}
+                  src={currentSource.src}
+                  title={currentVideo.title}
+                  className="w-full h-full border-0"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="text-center p-8 text-white space-y-2">
+                  <PlayCircle className="w-12 h-12 mx-auto text-gray-500" />
+                  <p className="text-xs text-gray-400">No video stream available for this lesson.</p>
                 </div>
-              </div>
-            )}
-
-            <div style={{ padding: '1.5rem' }}>
-              <h3 style={{ marginBottom: '0.5rem' }}>
-                {currentVideoIndex + 1}. {currentVideo.title}
-              </h3>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <span className="muted">{getDurationLabel(currentVideoIndex)}</span>
-                {enrollment?.completedVideos?.includes(currentVideoIndex) && (
-                  <span style={{ color: '#10b981', fontWeight: '600' }}>Completed</span>
-                )}
-              </div>
-
-              {(!enrollment || !enrollment.completedVideos?.includes(currentVideoIndex)) && (
-                <button onClick={() => markVideoCompleted(currentVideoIndex)} className="primary-btn" style={{ marginTop: '1rem' }}>
-                  Mark as Completed
-                </button>
               )}
             </div>
-          </div>
 
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Course Videos</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {course.videos.map((video, index) => {
-                const isCompleted = enrollment?.completedVideos?.includes(index);
-                const isCurrent = index === currentVideoIndex;
-
-                return (
-                  <button
-                    key={`${video.title}-${index}`}
-                    onClick={() => setCurrentVideoIndex(index)}
-                    style={{
-                      padding: '1rem',
-                      border: isCurrent ? '2px solid var(--brand)' : '1px solid var(--line)',
-                      borderRadius: '8px',
-                      background: isCurrent ? 'rgba(10, 106, 116, 0.05)' : 'transparent',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    className="video-playlist-item"
-                  >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '24px minmax(0, 1fr)',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '1.2rem',
-                          minWidth: '24px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        {isCompleted ? '✓' : isCurrent ? '▶' : '○'}
+            {/* Lesson Title & Action Bar */}
+            <div className="bg-white border border-[#D1D7DC] rounded-lg p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-[#0056D2] bg-[#EBF3FF] px-2 py-0.5 rounded">
+                      Lesson {currentVideoIndex + 1} of {videos.length}
+                    </span>
+                    {isCurrentCompleted && (
+                      <span className="text-xs font-bold text-[#0A8543] bg-[#E6F4EA] border border-[#A8DAB5] px-2 py-0.5 rounded flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>Completed</span>
                       </span>
-                      <div
-                        style={{
-                          display: 'grid',
-                          gap: '0.25rem',
-                          minWidth: 0
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: isCurrent ? '600' : '500',
-                            lineHeight: '1.4',
-                            wordBreak: 'break-word'
-                          }}
-                        >
-                          {index + 1}. {video.title}
-                        </div>
-                        <small className="muted" style={{ fontSize: '0.85rem' }}>
-                          {getDurationLabel(index)}
-                        </small>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          {course.quizQuestions?.length > 0 && (
-            <div className="card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ marginBottom: '1rem' }}>Course Assessment</h3>
-              <p className="muted" style={{ marginBottom: '1rem' }}>
-                Test your knowledge with {course.quizQuestions.length} quiz questions.
-              </p>
-
-              {enrollment?.quizSubmittedAt ? (
-                <div>
-                  <div style={{ padding: '1rem', background: '#d1fae5', borderRadius: '8px', marginBottom: '1rem' }}>
-                    <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Assessment Completed</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand)' }}>
-                      Score: {enrollment.quizScore}%
-                    </div>
+                    )}
                   </div>
-                  <Link to={`/courses/${id}/assessment`} className="ghost-btn" style={{ width: '100%', textAlign: 'center' }}>
-                    View Results
-                  </Link>
+                  <h2 className="text-lg font-bold text-[#1F1F1F] mt-1.5">
+                    {currentVideo.title || `Lesson ${currentVideoIndex + 1}`}
+                  </h2>
                 </div>
-              ) : (
-                <div>
-                  {allVideosCompleted ? (
-                    <Link to={`/courses/${id}/assessment`} className="primary-btn" style={{ width: '100%', textAlign: 'center' }}>
-                      Start Assessment
-                    </Link>
+
+                {/* Video Controls / Mark Complete */}
+                <div className="flex items-center gap-2">
+                  {!isCurrentCompleted ? (
+                    <button
+                      onClick={() => markVideoCompleted(currentVideoIndex)}
+                      className="coursera-btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-bold"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Mark Lesson Completed</span>
+                    </button>
                   ) : (
-                    <div style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', textAlign: 'center' }}>
-                      <p style={{ fontSize: '0.9rem' }}>
-                        Complete all {course.videos.length} videos to unlock the assessment
-                      </p>
-                      <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: '#92400e' }}>
-                        {completedCount}/{course.videos.length} completed
-                      </p>
+                    <div className="text-xs font-bold text-[#0A8543] flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Lesson Watched</span>
                     </div>
                   )}
-                </div>
-              )}
-            </div>
-          )}
 
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Your Progress</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                  Videos Watched
-                </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand)' }}>
-                  {completedCount}/{course.videos.length}
+                  {currentVideoIndex < videos.length - 1 && (
+                    <button
+                      onClick={() => setCurrentVideoIndex(currentVideoIndex + 1)}
+                      className="px-3.5 py-2 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#1F1F1F] text-xs font-bold rounded transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                  Overall Progress
+              {/* Lesson Tabs */}
+              <div className="border-t border-[#E0E0E0] pt-4">
+                <div className="flex items-center gap-4 border-b border-[#E0E0E0] pb-2 text-xs font-bold">
+                  <button
+                    onClick={() => setActiveTab('overview')}
+                    className={`pb-2 border-b-2 transition-colors ${
+                      activeTab === 'overview'
+                        ? 'border-[#0056D2] text-[#0056D2]'
+                        : 'border-transparent text-[#757575] hover:text-[#1F1F1F]'
+                    }`}
+                  >
+                    Lesson Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('notes')}
+                    className={`pb-2 border-b-2 transition-colors ${
+                      activeTab === 'notes'
+                        ? 'border-[#0056D2] text-[#0056D2]'
+                        : 'border-transparent text-[#757575] hover:text-[#1F1F1F]'
+                    }`}
+                  >
+                    Notes & Key Takeaways
+                  </button>
                 </div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--brand)' }}>
-                  {progressPercent}%
-                </div>
-              </div>
 
-              {enrollment?.quizScore > 0 && (
-                <div>
-                  <div className="muted" style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                    Assessment Score
+                {activeTab === 'overview' ? (
+                  <div className="pt-3 space-y-3 text-xs text-[#555555] leading-relaxed">
+                    <p>
+                      {currentVideo.description || course.description || 'Welcome to this curriculum lesson. Focus on the core principles discussed in the video stream above and practice along.'}
+                    </p>
+                    <div className="flex items-center gap-4 text-[#6A6F73] pt-1">
+                      <span>Instructor: <strong className="text-[#1F1F1F]">{course.instructorName || 'Crescentia Faculty'}</strong></span>
+                      <span>Level: <strong className="text-[#1F1F1F]">{course.level || 'Beginner'}</strong></span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981' }}>
-                    {enrollment.quizScore}%
+                ) : (
+                  <div className="pt-3 space-y-2 text-xs text-[#555555]">
+                    <div className="p-3 bg-[#F8F9FA] rounded border border-[#E0E0E0] font-mono text-[11px] leading-relaxed">
+                      💡 <strong>Study Tip:</strong> Pay special attention to the core concepts presented in this lesson. They are directly covered in the final course assessment required for your certificate.
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
-          <button onClick={() => navigate('/dashboard')} className="ghost-btn" style={{ width: '100%', marginTop: '1rem' }}>
-            Back to Dashboard
-          </button>
+          {/* Right 1 Col: Sticky Curriculum Syllabus & Assessment Card */}
+          <div className="space-y-4">
+            {/* Syllabus Card */}
+            <div className="bg-white border border-[#D1D7DC] rounded-lg shadow-xs overflow-hidden">
+              <div className="p-4 bg-[#F8F9FA] border-b border-[#D1D7DC] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-[#0056D2]" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1F1F1F]">
+                    Curriculum Lessons ({videos.length})
+                  </h3>
+                </div>
+                <span className="text-[11px] text-[#6A6F73]">
+                  {completedCount}/{videos.length} Done
+                </span>
+              </div>
+
+              <div className="divide-y divide-[#E0E0E0] max-h-[420px] overflow-y-auto">
+                {videos.map((video, idx) => {
+                  const isCompleted = enrollment?.completedVideos?.includes(idx);
+                  const isCurrent = idx === currentVideoIndex;
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentVideoIndex(idx)}
+                      className={`w-full p-3.5 text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                        isCurrent
+                          ? 'bg-[#EBF3FF] border-l-4 border-[#0056D2]'
+                          : 'bg-white hover:bg-[#F8F9FA]'
+                      }`}
+                    >
+                      <div className="shrink-0 mt-0.5">
+                        {isCompleted ? (
+                          <div className="w-5 h-5 rounded-full bg-[#E6F4EA] text-[#0A8543] flex items-center justify-center">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        ) : isCurrent ? (
+                          <div className="w-5 h-5 rounded-full bg-[#0056D2] text-white flex items-center justify-center">
+                            <PlayCircle className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-[#F0F2F5] text-[#555555] text-[10px] font-bold flex items-center justify-center">
+                            {idx + 1}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={`text-xs leading-snug line-clamp-2 ${
+                            isCurrent ? 'font-bold text-[#0056D2]' : 'font-semibold text-[#1F1F1F]'
+                          }`}
+                        >
+                          {video.title || `Lesson ${idx + 1}`}
+                        </div>
+                        <div className="text-[10px] text-[#6A6F73] flex items-center gap-2 mt-1">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {video.durationMinutes || 15} mins
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Assessment & Certificate Card */}
+            {course.quizQuestions?.length > 0 && (
+              <div className="bg-white border border-[#D1D7DC] rounded-lg p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#0056D2]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#1F1F1F]">
+                    Final Assessment & Certificate
+                  </h4>
+                </div>
+
+                {hasPassedQuiz ? (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-[#E6F4EA] border border-[#A8DAB5] rounded-md text-xs space-y-1">
+                      <div className="font-bold text-[#0A8543] flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Assessment Passed ({enrollment.quizScore}%)</span>
+                      </div>
+                      <p className="text-[11px] text-[#555555]">
+                        You unlocked the official verified Certificate of Completion for this course.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleDownloadCertificate}
+                      disabled={downloadingCert}
+                      className="w-full py-2.5 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold rounded flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>{downloadingCert ? 'Generating PDF...' : 'Download Official Certificate'}</span>
+                    </button>
+
+                    <Link
+                      to={`/courses/${id}/assessment`}
+                      className="block text-center text-xs font-semibold text-[#0056D2] hover:underline"
+                    >
+                      Review Assessment Results
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-xs text-[#555555]">
+                      Test your understanding across {course.quizQuestions.length} multiple choice questions. Pass with 70%+ to claim your verified certificate.
+                    </p>
+
+                    {allVideosCompleted ? (
+                      <Link
+                        to={`/courses/${id}/assessment`}
+                        className="coursera-btn-primary block text-center py-2.5 text-xs font-bold"
+                      >
+                        Start Final Assessment ({course.quizQuestions.length} Qs)
+                      </Link>
+                    ) : (
+                      <div className="p-3 bg-[#FFF4E5] border border-[#FFE0B2] rounded-md text-xs text-[#B76E00] space-y-1">
+                        <span className="font-bold block">Assessment Locked</span>
+                        <span>
+                          Complete all {videos.length} curriculum lessons to unlock the final exam.
+                        </span>
+                        <div className="text-[11px] text-[#757575] pt-1">
+                          {completedCount}/{videos.length} completed
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

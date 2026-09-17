@@ -22,16 +22,18 @@ const listCourses = asyncHandler(async (req, res) => {
     ];
   }
 
-  // Admin sees all courses, instructors see only their own, users see assigned courses
+  // Admin sees all courses, instructors see only their own, users/guests see published courses
   if (req.user && req.user.role === 'instructor') {
     query.createdBy = req.user._id;
-  } else if (req.user && req.user.role === 'user') {
+  } else if (req.user && req.user.role === 'admin') {
+    // Admins see all courses
+  } else if (req.user && req.user.role === 'user' && req.query.myCourses === 'true') {
     query._id = { $in: req.user.assignedCourses };
     query.isPublished = true;
+  } else {
+    // Regular users and public guests see all published courses
+    query.isPublished = true;
   }
-
-  // Admins see all courses (published and unpublished)
-  // No isPublished filter for admins
 
   // Optimized: Select only necessary fields, limit results
   const courses = await Course.find(query)
@@ -160,11 +162,15 @@ const searchCourses = asyncHandler(async (req, res) => {
   if (category) query.category = category;
   if (level) query.level = level;
 
-  // Filter by created courses for instructors, assigned courses for users
+  // Filter by created courses for instructors, or published for users/guests
   if (req.user && req.user.role === 'instructor') {
     query.createdBy = req.user._id;
-  } else if (req.user && req.user.role === 'user') {
+  } else if (req.user && req.user.role === 'admin') {
+    // Admins see all courses
+  } else if (req.user && req.user.role === 'user' && req.query.myCourses === 'true') {
     query._id = { $in: req.user.assignedCourses };
+    query.isPublished = true;
+  } else {
     query.isPublished = true;
   }
 

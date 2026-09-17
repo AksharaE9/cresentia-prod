@@ -110,4 +110,62 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
-export { register, verifyEmail, login, me };
+const updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const { name } = req.body;
+  if (name && name.trim()) {
+    user.name = name.trim();
+  }
+
+  await user.save();
+
+  res.json({
+    message: 'Profile updated successfully',
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      assignedCourses: user.assignedCourses
+    }
+  });
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Both current and new password are required');
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error('New password must be at least 6 characters');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) {
+    res.status(401);
+    throw new Error('Incorrect current password');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.json({ message: 'Password updated successfully' });
+});
+
+export { register, verifyEmail, login, me, updateProfile, changePassword };

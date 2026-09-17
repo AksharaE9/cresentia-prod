@@ -53,6 +53,28 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+// Optional authentication middleware - attaches req.user if token is valid, but allows guest access
+const optionalAuth = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.userId)
+      .select('-password')
+      .populate({
+        path: 'assignedCourses',
+        select: 'title description category level isPublished createdBy'
+      });
+  } catch (error) {
+    // Ignore invalid/expired token for optional endpoints
+  }
+  next();
+});
+
 // Legacy function - kept for backward compatibility
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
@@ -73,4 +95,4 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-export { protect, authorizeRoles, isAdmin };
+export { protect, optionalAuth, authorizeRoles, isAdmin };
