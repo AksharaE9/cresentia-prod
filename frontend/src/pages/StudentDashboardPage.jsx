@@ -353,6 +353,23 @@ const StudentDashboardPage = ({ defaultTab = 'overview' }) => {
           </div>
         )}
 
+        {/* Back Button Bar - shown on all non-overview tabs */}
+        {activeTab !== 'overview' && (
+          <div className="flex items-center gap-3 bg-white border border-[#D1D7DC] rounded-lg px-4 py-3 shadow-xs">
+            <button
+              onClick={() => switchTab('overview')}
+              className="flex items-center gap-2 text-[#0056D2] hover:text-[#0047BA] font-bold text-sm transition-colors cursor-pointer group"
+            >
+              <span className="w-8 h-8 rounded-lg bg-[#EBF3FF] group-hover:bg-[#D4E8FF] flex items-center justify-center transition-colors">
+                <ChevronLeft className="w-4 h-4" />
+              </span>
+              <span>Back to Dashboard</span>
+            </button>
+            <span className="text-[#D1D7DC]">|</span>
+            <span className="text-xs text-[#6A6F73] font-medium">{activeLabel}</span>
+          </div>
+        )}
+
         {activeTab === 'courses' && <StudentMyCourses enrollments={enrollments} onRefresh={loadStudentData} />}
         {activeTab === 'progress' && <StudentProgress enrollments={enrollments} />}
         {activeTab === 'certificates' && <StudentCertificates enrollments={enrollments} />}
@@ -364,3 +381,4 @@ const StudentDashboardPage = ({ defaultTab = 'overview' }) => {
 };
 
 export default StudentDashboardPage;
+
