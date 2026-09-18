@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import TermsModal from '../components/TermsModal';
 
 const RegisterPage = () => {
   const { register, login } = useAuth();
@@ -11,6 +12,8 @@ const RegisterPage = () => {
   const [agreed, setAgreed] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsTab, setTermsTab] = useState('terms');
 
   // Password strength calculation
   const getPasswordStrength = (pwd) => {
@@ -183,8 +186,29 @@ const RegisterPage = () => {
                 />
                 <span>
                   I agree to Crescentia's{' '}
-                  <span className="text-[#0056D2] font-semibold underline">Terms of Use</span> and{' '}
-                  <span className="text-[#0056D2] font-semibold underline">Privacy Notice</span>.
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTermsTab('terms');
+                      setTermsModalOpen(true);
+                    }}
+                    className="text-[#0056D2] font-semibold underline hover:text-[#00419E] bg-transparent border-none p-0 cursor-pointer text-xs inline"
+                  >
+                    Terms of Use
+                  </button>{' '}
+                  and{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setTermsTab('privacy');
+                      setTermsModalOpen(true);
+                    }}
+                    className="text-[#0056D2] font-semibold underline hover:text-[#00419E] bg-transparent border-none p-0 cursor-pointer text-xs inline"
+                  >
+                    Privacy Notice
+                  </button>.
                 </span>
               </label>
             </div>
@@ -209,9 +233,39 @@ const RegisterPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-[#6A6F73] border-t border-[#D1D7DC] bg-white">
-        © {new Date().getFullYear()} Crescentia Inc. All rights reserved.
+      <footer className="py-4 text-center text-xs text-[#6A6F73] border-t border-[#D1D7DC] bg-white flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
+        <span>© {new Date().getFullYear()} Crescentia Inc. All rights reserved.</span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setTermsTab('terms');
+              setTermsModalOpen(true);
+            }}
+            className="text-[#6A6F73] hover:text-[#0056D2] hover:underline bg-transparent border-none p-0 cursor-pointer text-xs"
+          >
+            Terms of Use
+          </button>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => {
+              setTermsTab('privacy');
+              setTermsModalOpen(true);
+            }}
+            className="text-[#6A6F73] hover:text-[#0056D2] hover:underline bg-transparent border-none p-0 cursor-pointer text-xs"
+          >
+            Privacy Notice
+          </button>
+        </div>
       </footer>
+
+      {/* Terms and Privacy Modal */}
+      <TermsModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        initialTab={termsTab}
+      />
     </div>
   );
 };

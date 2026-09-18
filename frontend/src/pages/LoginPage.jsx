@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import TermsModal from '../components/TermsModal';
 
 const LoginPage = () => {
   const { login } = useAuth();
@@ -10,6 +11,8 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsTab, setTermsTab] = useState('terms');
   const navigate = useNavigate();
 
   const submit = async (e) => {
@@ -143,9 +146,39 @@ const LoginPage = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-[#6A6F73] border-t border-[#D1D7DC] bg-white">
-        © {new Date().getFullYear()} Crescentia Inc. All rights reserved.
+      <footer className="py-4 text-center text-xs text-[#6A6F73] border-t border-[#D1D7DC] bg-white flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6">
+        <span>© {new Date().getFullYear()} Crescentia Inc. All rights reserved.</span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setTermsTab('terms');
+              setTermsModalOpen(true);
+            }}
+            className="text-[#6A6F73] hover:text-[#0056D2] hover:underline bg-transparent border-none p-0 cursor-pointer text-xs"
+          >
+            Terms of Use
+          </button>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => {
+              setTermsTab('privacy');
+              setTermsModalOpen(true);
+            }}
+            className="text-[#6A6F73] hover:text-[#0056D2] hover:underline bg-transparent border-none p-0 cursor-pointer text-xs"
+          >
+            Privacy Notice
+          </button>
+        </div>
       </footer>
+
+      {/* Terms and Privacy Modal */}
+      <TermsModal
+        isOpen={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        initialTab={termsTab}
+      />
     </div>
   );
 };

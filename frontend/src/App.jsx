@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import CoursePage from './pages/CoursePage';
 import AssessmentPage from './pages/AssessmentPage';
 import StudentDashboardPage from './pages/StudentDashboardPage';
+import TermsPage from './pages/TermsPage';
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, loading } = useAuth();
@@ -51,6 +52,8 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<TermsPage />} />
         <Route path="/courses" element={<HomePage />} />
         <Route
           path="/courses/:id"
