@@ -33,6 +33,7 @@ const Navbar = () => {
 
   // Explore Megamenu state
   const [showExploreMenu, setShowExploreMenu] = useState(false);
+  const [activeExploreCategory, setActiveExploreCategory] = useState(0);
   const exploreRef = useRef(null);
 
   const exploreCategories = [
@@ -267,26 +268,34 @@ const Navbar = () => {
 
             {/* Coursera-Style Megamenu Dropdown */}
             {showExploreMenu && (
-              <div className="absolute top-full left-0 mt-2 w-[680px] bg-white border border-[#D1D7DC] rounded-2xl shadow-xl z-50 p-6 grid grid-cols-12 gap-6 text-left">
+              <div className="absolute top-full left-0 mt-2 w-[740px] bg-white border border-[#D1D7DC] rounded-2xl shadow-2xl z-50 p-6 grid grid-cols-12 gap-6 text-left animate-in fade-in-50 duration-150">
                 {/* Left 5 Cols: Categories */}
                 <div className="col-span-5 border-r border-[#E0E0E0] pr-4 space-y-1">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] px-3 pb-2">
                     Subject Areas
                   </div>
-                  {exploreCategories.map((cat, cIdx) => (
-                    <button
-                      key={cIdx}
-                      type="button"
-                      onClick={() => {
-                        setShowExploreMenu(false);
-                        navigate(`/courses?category=${encodeURIComponent(cat.slug)}`);
-                      }}
-                      className="w-full px-3 py-2 rounded-lg text-xs font-bold text-[#1F1F1F] hover:text-[#0056D2] hover:bg-[#F8F9FA] flex items-center justify-between transition-colors text-left cursor-pointer border-none bg-transparent"
-                    >
-                      <span>{cat.title}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#9CA3AF]" />
-                    </button>
-                  ))}
+                  {exploreCategories.map((cat, cIdx) => {
+                    const isSelected = activeExploreCategory === cIdx;
+                    return (
+                      <button
+                        key={cIdx}
+                        type="button"
+                        onMouseEnter={() => setActiveExploreCategory(cIdx)}
+                        onClick={() => {
+                          setShowExploreMenu(false);
+                          navigate(`/courses?category=${encodeURIComponent(cat.slug)}`);
+                        }}
+                        className={`w-full px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-between transition-colors text-left cursor-pointer border-none ${
+                          isSelected
+                            ? 'bg-[#EBF3FF] text-[#0056D2]'
+                            : 'text-[#1F1F1F] hover:bg-[#F8F9FA] hover:text-[#0056D2] bg-transparent'
+                        }`}
+                      >
+                        <span>{cat.title}</span>
+                        <ArrowRight className={`w-3.5 h-3.5 ${isSelected ? 'text-[#0056D2]' : 'text-[#9CA3AF]'}`} />
+                      </button>
+                    );
+                  })}
                   <div className="pt-2">
                     <button
                       type="button"
@@ -302,9 +311,43 @@ const Navbar = () => {
                   </div>
                 </div>
 
-                {/* Right 7 Cols: Popular Skills & Fast Credentials */}
+                {/* Right 7 Cols: Dynamic Category Details + Popular Skills & Credentials */}
                 <div className="col-span-7 space-y-4">
-                  <div>
+                  {/* Dynamic Category Focus */}
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73]">
+                      Topics in {exploreCategories[activeExploreCategory]?.title}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {exploreCategories[activeExploreCategory]?.topics.map((topic) => (
+                        <button
+                          key={topic}
+                          type="button"
+                          onClick={() => {
+                            setShowExploreMenu(false);
+                            navigate(`/courses?q=${encodeURIComponent(topic)}`);
+                          }}
+                          className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#0056D2] bg-[#EBF3FF] hover:bg-[#0056D2] hover:text-white border border-[#B3D1FF] transition-colors cursor-pointer"
+                        >
+                          {topic}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExploreMenu(false);
+                        navigate(`/courses?category=${encodeURIComponent(exploreCategories[activeExploreCategory]?.slug)}`);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0056D2] hover:underline pt-1 bg-transparent border-none cursor-pointer"
+                    >
+                      <span>Explore all {exploreCategories[activeExploreCategory]?.title} courses</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Popular Global Technologies */}
+                  <div className="pt-3 border-t border-[#E0E0E0]">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] pb-2">
                       Popular Skills & Technologies
                     </div>
@@ -325,8 +368,9 @@ const Navbar = () => {
                     </div>
                   </div>
 
+                  {/* Verified Credentials Card */}
                   <div className="pt-2 border-t border-[#E0E0E0]">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] pb-2">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] pb-1.5">
                       Verified Credentials
                     </div>
                     <div
@@ -334,12 +378,12 @@ const Navbar = () => {
                         setShowExploreMenu(false);
                         navigate('/courses');
                       }}
-                      className="p-3 rounded-xl border border-[#D1D7DC] hover:border-[#0056D2] hover:bg-[#F8F9FA] cursor-pointer transition-all flex items-center gap-3 bg-[#FDFDFD]"
+                      className="p-2.5 rounded-xl border border-[#D1D7DC] hover:border-[#0056D2] hover:bg-[#F8F9FA] cursor-pointer transition-all flex items-center gap-3 bg-[#FDFDFD]"
                     >
                       <Award className="w-5 h-5 text-[#0056D2] shrink-0" />
                       <div>
                         <div className="text-xs font-bold text-[#1F1F1F]">Professional Certifications</div>
-                        <div className="text-[11px] text-[#6A6F73]">Earn verifiable credentials with 70%+ score</div>
+                        <div className="text-[11px] text-[#6A6F73]">Earn verifiable credentials with 70%+ passing score</div>
                       </div>
                     </div>
                   </div>
