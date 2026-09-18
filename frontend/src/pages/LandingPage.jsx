@@ -80,7 +80,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.8,
     ratingCount: 202235,
-    price: 569,
     category: 'Business Analysis',
     level: 'All Levels'
   },
@@ -91,7 +90,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.6,
     ratingCount: 8960,
-    price: 549,
     category: 'API Development',
     level: 'Beginner'
   },
@@ -102,7 +100,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.6,
     ratingCount: 11300,
-    price: 549,
     category: 'Machine Learning',
     level: 'Intermediate'
   },
@@ -113,7 +110,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.7,
     ratingCount: 436083,
-    price: 569,
     category: 'Web Development',
     level: 'All Levels'
   },
@@ -124,7 +120,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.9,
     ratingCount: 84210,
-    price: 599,
     category: 'Web Development',
     level: 'Intermediate'
   },
@@ -135,7 +130,6 @@ const FEATURED_TRENDING_COURSES = [
     thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
     ratingAverage: 4.8,
     ratingCount: 125600,
-    price: 549,
     category: 'Machine Learning',
     level: 'Beginner'
   }
