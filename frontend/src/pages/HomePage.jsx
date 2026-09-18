@@ -246,7 +246,7 @@ const HomePage = () => {
       )}
 
       {!loading && courseCards.length > 0 && (
-        <section className="grid courses-grid">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 sm:gap-6">
           {courseCards.map((course) => (
             <CourseCard key={course._id} course={course} />
           ))}

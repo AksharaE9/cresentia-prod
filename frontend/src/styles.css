@@ -2729,6 +2729,14 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .modern-course-card {
   padding: 0;
   overflow: hidden;
