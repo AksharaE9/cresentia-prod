@@ -161,7 +161,9 @@ const StudentCertificates = ({ enrollments = [] }) => {
               const course = e.course;
               if (!course) return null;
 
-              const credentialId = `CRS-${course._id.toString().slice(-6).toUpperCase()}-${user?._id.toString().slice(-4).toUpperCase()}`;
+              const courseIdStr = (course._id || course.id || '').toString();
+              const userIdStr = (user?._id || user?.id || 'STU').toString();
+              const credentialId = `CRS-${(courseIdStr.slice(-6) || 'CRS001').toUpperCase()}-${(userIdStr.slice(-4) || 'AUTH').toUpperCase()}`;
               const completionDate = e.quizSubmittedAt || e.updatedAt;
 
               return (
