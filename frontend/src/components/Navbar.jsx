@@ -252,7 +252,7 @@ const Navbar = () => {
             <span>crescentia</span>
           </Link>
 
-          <div ref={exploreRef} className="hidden lg:flex items-center relative">
+          <div ref={exploreRef} className="flex items-center relative">
             <button
               type="button"
               onClick={() => setShowExploreMenu(!showExploreMenu)}
@@ -268,9 +268,9 @@ const Navbar = () => {
 
             {/* Coursera-Style Megamenu Dropdown */}
             {showExploreMenu && (
-              <div className="absolute top-full left-0 mt-2 w-[740px] bg-white border border-[#D1D7DC] rounded-2xl shadow-2xl z-50 p-6 grid grid-cols-12 gap-6 text-left animate-in fade-in-50 duration-150">
+              <div className="absolute top-full left-0 mt-2 w-[740px] max-w-[calc(100vw-2rem)] bg-white border border-[#D1D7DC] rounded-2xl shadow-2xl z-50 p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 text-left animate-in fade-in-50 duration-150 max-h-[85vh] overflow-y-auto">
                 {/* Left 5 Cols: Categories */}
-                <div className="col-span-5 border-r border-[#E0E0E0] pr-4 space-y-1">
+                <div className="col-span-12 sm:col-span-5 border-b sm:border-b-0 sm:border-r border-[#E0E0E0] pb-4 sm:pb-0 sm:pr-4 space-y-1">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] px-3 pb-2">
                     Subject Areas
                   </div>
@@ -312,7 +312,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Right 7 Cols: Dynamic Category Details + Popular Skills & Credentials */}
-                <div className="col-span-7 space-y-4">
+                <div className="col-span-12 sm:col-span-7 space-y-4">
                   {/* Dynamic Category Focus */}
                   <div className="space-y-2">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73]">
