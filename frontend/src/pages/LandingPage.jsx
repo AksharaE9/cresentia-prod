@@ -21,7 +21,6 @@ import {
   Building2,
   ShieldCheck,
   GraduationCap,
-  Sparkles,
   ExternalLink,
   Github,
   Linkedin,
@@ -699,7 +698,7 @@ const LandingPage = () => {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-bold uppercase tracking-wider bg-[#FFF2EA] text-[#C2410C] px-2.5 py-0.5 rounded-full border border-[#FFD8C4] flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#C2410C]" />
+                <TrendingUp className="w-3 h-3 text-[#C2410C]" />
                 Trending Courses
               </span>
               <span className="text-xs text-[#6A6F73] font-medium hidden sm:inline">• Top Rated & Enrolled</span>
@@ -770,11 +769,6 @@ const LandingPage = () => {
       {/* Outcome Statistics Banner - Starting Stage Level Numbers */}
       <section className="bg-[#EBF3FF] border-y border-[#C2DCFF] py-16 px-6 text-center">
         <div className="max-w-6xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#C2DCFF] text-[#0056D2] text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#0056D2]" />
-            <span>Foundational Tech Platform</span>
-          </div>
-
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1F1F1F] mb-3 tracking-tight">
             Built for Mastery from Day One
           </h2>
@@ -882,7 +876,7 @@ const LandingPage = () => {
         <div className="border-b border-[#E2E8F0] bg-white py-3.5 px-6 sm:px-10">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-center md:text-left">
-              <Sparkles className="w-4 h-4 text-[#0056D2] shrink-0" />
+              <Mail className="w-4 h-4 text-[#0056D2] shrink-0" />
               <span className="text-xs font-semibold text-[#0F172A]">
                 Stay updated on new courses, industry certifications & curriculum releases:
               </span>
