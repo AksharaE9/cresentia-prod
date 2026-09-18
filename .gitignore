@@ -7,7 +7,6 @@ frontend/npm-debug.log*
 .DS_Store
 .vercel
 *.log
-dist
 build
 
 .vercel
