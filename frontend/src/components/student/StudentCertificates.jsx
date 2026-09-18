@@ -9,7 +9,9 @@ import {
   ShieldCheck,
   Calendar,
   ArrowRight,
-  BookOpen
+  BookOpen,
+  Share2,
+  Check
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +20,18 @@ const StudentCertificates = ({ enrollments = [] }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [downloadingId, setDownloadingId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopyLink = (credentialId) => {
+    navigator.clipboard.writeText(`${window.location.origin}/certificates#${credentialId}`);
+    setCopiedId(credentialId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleShareLinkedIn = (title, credentialId) => {
+    const url = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(title)}&organizationName=Crescentia&certUrl=${encodeURIComponent(window.location.origin + '/certificates')}&certId=${encodeURIComponent(credentialId)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   const earnedCertificates = enrollments.filter(
     (e) => e.quizScore >= 70
@@ -213,22 +227,43 @@ const StudentCertificates = ({ enrollments = [] }) => {
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-2 flex items-center gap-3">
+                  <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
                     <button
                       onClick={() => handleDownload(course._id, course.title)}
                       disabled={downloadingId === course._id}
-                      className="flex-1 py-2.5 px-4 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold rounded-md transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                      className="flex-1 py-2.5 px-4 bg-[#0056D2] hover:bg-[#00419E] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
                     >
                       <Download className="w-4 h-4" />
-                      <span>{downloadingId === course._id ? 'Generating PDF...' : 'Download Official Certificate'}</span>
+                      <span>{downloadingId === course._id ? 'Generating PDF...' : 'Download Certificate (PDF)'}</span>
                     </button>
 
                     <button
-                      onClick={() => navigate(`/courses/${course._id}`)}
-                      className="p-2.5 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#1F1F1F] rounded-md transition-colors"
-                      title="Review Course"
+                      type="button"
+                      onClick={() => handleShareLinkedIn(course.title, credentialId)}
+                      className="py-2.5 px-3.5 bg-[#0A66C2] hover:bg-[#084e96] text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Add certificate to LinkedIn Profile"
                     >
-                      <ExternalLink className="w-4 h-4" />
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>LinkedIn</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(credentialId)}
+                      className="py-2.5 px-3 bg-[#F0F2F5] hover:bg-[#E4E6EB] text-[#1F1F1F] text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      title="Copy Verifiable Link"
+                    >
+                      {copiedId === credentialId ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#0A8543]" />
+                          <span className="text-[11px] text-[#0A8543] font-bold">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span className="text-[11px]">Copy Link</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
