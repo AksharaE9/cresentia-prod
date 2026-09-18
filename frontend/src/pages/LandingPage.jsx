@@ -614,14 +614,30 @@ const LandingPage = () => {
                 className="w-full rounded-2xl object-cover shadow-md"
                 style={{ aspectRatio: '4/3' }}
               />
-              <div className="absolute -bottom-3 -left-3 bg-white rounded-lg shadow-md px-3 py-2 flex items-center gap-2.5 border border-[#E0E0E0]">
-                <div className="w-8 h-8 rounded-full bg-[#EBF3FF] flex items-center justify-center">
-                  <GraduationCap className="w-4 h-4 text-[#0056D2]" />
+              {/* Verified Certificates Badge (Coursera / Udemy Style) */}
+              <div className="absolute -bottom-4 -left-3 sm:-left-4 bg-white rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 border border-[#D1D7DC]">
+                <div className="w-10 h-10 rounded-xl bg-[#E6F4EA] border border-[#A8DAB5] flex items-center justify-center text-[#0A8543] shadow-2xs shrink-0">
+                  <Award className="w-5 h-5 text-[#0A8543]" />
                 </div>
                 <div>
-                  <div className="text-[13px] font-bold text-[#1F1F1F]">8+ Courses</div>
-                  <div className="text-[10px] text-[#6A6F73]">Industry-aligned curriculum</div>
+                  <div className="text-xs sm:text-sm font-extrabold text-[#1F1F1F] flex items-center gap-1.5">
+                    <span>Verified Certificates</span>
+                    <span className="text-[10px] font-bold text-[#0A8543] bg-[#E6F4EA] px-1.5 py-0.5 rounded">
+                      Accredited
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#6A6F73]">Recognized by leading tech employers</div>
                 </div>
+              </div>
+
+              {/* Active Learners Social Proof Pill on Top Right */}
+              <div className="absolute -top-3 -right-3 bg-white rounded-full shadow-md px-3.5 py-1.5 flex items-center gap-2 border border-[#D1D7DC]">
+                <div className="flex -space-x-1.5">
+                  <div className="w-5 h-5 rounded-full bg-[#0056D2] text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-white">AK</div>
+                  <div className="w-5 h-5 rounded-full bg-[#0A8543] text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-white">RS</div>
+                  <div className="w-5 h-5 rounded-full bg-[#B4690E] text-white text-[9px] font-bold flex items-center justify-center ring-1 ring-white">SJ</div>
+                </div>
+                <span className="text-[11px] font-bold text-[#1F1F1F]">200,000+ Learners</span>
               </div>
             </div>
           </div>
@@ -881,7 +897,7 @@ const LandingPage = () => {
 
             <div className="bg-white p-5 sm:p-6 rounded-lg border border-[#D1D7DC] shadow-xs hover:border-[#0056D2] transition-colors flex flex-col justify-between">
               <div>
-                <div className="text-3xl sm:text-4xl font-black text-[#0056D2] mb-1">8+</div>
+                <div className="text-3xl sm:text-4xl font-black text-[#0056D2] mb-1">12+</div>
                 <div className="text-sm font-bold text-[#1F1F1F]">Core Specializations</div>
                 <p className="text-xs text-[#6A6F73] mt-1.5 leading-relaxed">
                   Curated tracks across Full-Stack, AI, Cloud, and UI/UX Design.
