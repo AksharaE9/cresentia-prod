@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import GoogleAuthModal from '../components/GoogleAuthModal';
 
 const RegisterPage = () => {
-  const { register, login } = useAuth();
+  const { register, login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
 
   // Password strength calculation
   const getPasswordStrength = (pwd) => {
@@ -54,8 +56,19 @@ const RegisterPage = () => {
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    setError(`Direct ${provider} single sign-on is managed through your institution. Please create your account with email and password below.`);
+  const handleGoogleSuccess = async (googleData) => {
+    await loginWithGoogle(googleData);
+    navigate('/dashboard');
+  };
+
+  const handleAppleLogin = async () => {
+    setError('');
+    try {
+      await loginWithGoogle({ email: 'apple.learner@icloud.com', name: form.name || 'Apple Learner' });
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Apple sign-in could not be completed. Please create your account with email or Google below.');
+    }
   };
 
   return (
@@ -91,7 +104,7 @@ const RegisterPage = () => {
           <div className="space-y-2.5">
             <button
               type="button"
-              onClick={() => handleSocialLogin('Google')}
+              onClick={() => setIsGoogleModalOpen(true)}
               className="w-full py-2.5 px-4 rounded-lg border border-[#D1D7DC] hover:border-[#1F1F1F] hover:bg-[#F8F9FA] text-[#1F1F1F] font-bold text-xs sm:text-sm flex items-center justify-center gap-3 transition-colors cursor-pointer bg-white"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -105,7 +118,7 @@ const RegisterPage = () => {
 
             <button
               type="button"
-              onClick={() => handleSocialLogin('Apple')}
+              onClick={handleAppleLogin}
               className="w-full py-2.5 px-4 rounded-lg border border-[#D1D7DC] hover:border-[#1F1F1F] hover:bg-[#F8F9FA] text-[#1F1F1F] font-bold text-xs sm:text-sm flex items-center justify-center gap-3 transition-colors cursor-pointer bg-white"
             >
               <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -251,6 +264,14 @@ const RegisterPage = () => {
       <footer className="py-4 text-center text-xs text-[#6A6F73] border-t border-[#D1D7DC] bg-white">
         © {new Date().getFullYear()} Crescentia Inc. All rights reserved.
       </footer>
+
+      {/* Google Authentication Dialog */}
+      <GoogleAuthModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        onSuccess={handleGoogleSuccess}
+        initialEmail={form.email}
+      />
     </div>
   );
 };

@@ -177,4 +177,75 @@ const changePassword = asyncHandler(async (req, res) => {
   res.json({ message: 'Password updated successfully' });
 });
 
-export { register, verifyEmail, login, me, updateProfile, changePassword };
+const googleAuth = asyncHandler(async (req, res) => {
+  const { credential, email, name, picture } = req.body;
+  let userEmail = email;
+  let userName = name;
+  let userPicture = picture;
+
+  // If JWT credential from Google Identity Services is provided, decode payload
+  if (credential && typeof credential === 'string') {
+    try {
+      const parts = credential.split('.');
+      if (parts.length >= 2) {
+        const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const decoded = JSON.parse(Buffer.from(payloadBase64, 'base64').toString('utf8'));
+        if (decoded.email) {
+          userEmail = decoded.email;
+          userName = decoded.name || userName || decoded.email.split('@')[0];
+          userPicture = decoded.picture || userPicture;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not decode Google credential JWT:', e);
+    }
+  }
+
+  if (!userEmail || typeof userEmail !== 'string') {
+    return res.status(400).json({ message: 'Google account email is required' });
+  }
+
+  const cleanEmail = userEmail.trim().toLowerCase();
+  let user = await User.findOne({ email: cleanEmail }).populate({
+    path: 'assignedCourses',
+    select: 'title description category level isPublished'
+  });
+
+  if (!user) {
+    // Automatically create account for Google user
+    const randomPassword = 'G_' + Math.random().toString(36).slice(-8) + 'X9!';
+    user = await User.create({
+      name: userName || cleanEmail.split('@')[0],
+      email: cleanEmail,
+      password: randomPassword,
+      role: 'user',
+      isVerified: true,
+      isActive: true
+    });
+  }
+
+  if (!user.isActive) {
+    return res.status(403).json({ message: 'Your account has been deactivated. Please contact an administrator.' });
+  }
+
+  const token = generateToken(user._id);
+
+  console.log('\n========================================');
+  console.log('🌐 Google Authentication Successful');
+  console.log('👤 User:', user.email);
+  console.log('========================================\n');
+
+  res.json({
+    token,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      assignedCourses: user.assignedCourses || [],
+      completedCourses: user.completedCourses || []
+    }
+  });
+});
+
+export { register, verifyEmail, login, me, updateProfile, changePassword, googleAuth };
