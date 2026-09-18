@@ -16,7 +16,8 @@ import {
   Compass,
   Menu,
   X,
-  LogOut
+  LogOut,
+  ChevronLeft
 } from 'lucide-react';
 import api from '../services/api';
 import StudentMyCourses from '../components/student/StudentMyCourses';
@@ -375,24 +376,72 @@ const StudentDashboardPage = ({ defaultTab = 'overview' }) => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div onClick={() => switchTab('certificates')} className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] rounded-lg p-5 shadow-xs transition-all cursor-pointer space-y-2 group">
-                <div className="w-10 h-10 rounded-lg bg-[#EBF3FF] text-[#0056D2] flex items-center justify-center"><Award className="w-5 h-5" /></div>
-                <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">Official Certificates</h4>
-                <p className="text-xs text-[#555555]">View and download verifiable PDF certificates for courses where you passed the final assessment.</p>
-              </div>
-              <div onClick={() => switchTab('progress')} className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] rounded-lg p-5 shadow-xs transition-all cursor-pointer space-y-2 group">
-                <div className="w-10 h-10 rounded-lg bg-[#E6F4EA] text-[#0A8543] flex items-center justify-center"><TrendingUp className="w-5 h-5" /></div>
-                <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">Learning Analytics</h4>
-                <p className="text-xs text-[#555555]">Track your curriculum milestones, assessment attempt scores, and overall learning rate.</p>
-              </div>
-              <div onClick={() => switchTab('notifications')} className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] rounded-lg p-5 shadow-xs transition-all cursor-pointer space-y-2 group">
-                <div className="w-10 h-10 rounded-lg bg-[#FFF4E5] text-[#B76E00] flex items-center justify-center relative">
-                  <Bell className="w-5 h-5" />
-                  {unreadNotifsCount > 0 && <span className="w-2.5 h-2.5 rounded-full bg-red-600 absolute top-1 right-1" />}
+              <button
+                type="button"
+                onClick={() => switchTab('certificates')}
+                className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] hover:shadow-md rounded-xl p-5 shadow-xs transition-all cursor-pointer text-left flex flex-col justify-between group h-full"
+              >
+                <div className="space-y-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-[#EBF3FF] text-[#0056D2] flex items-center justify-center">
+                    <Award className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">
+                    Official Certificates
+                  </h4>
+                  <p className="text-xs text-[#555555] leading-relaxed">
+                    View and download verifiable PDF certificates for courses where you passed the final assessment.
+                  </p>
                 </div>
-                <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">Personalized Notifications</h4>
-                <p className="text-xs text-[#555555]">Stay updated on new course assignments, assessment results, and earned certificates.</p>
-              </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0056D2] pt-4 mt-2 border-t border-[#F0F2F5] group-hover:translate-x-1 transition-transform">
+                  <span>View Certificates</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchTab('progress')}
+                className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] hover:shadow-md rounded-xl p-5 shadow-xs transition-all cursor-pointer text-left flex flex-col justify-between group h-full"
+              >
+                <div className="space-y-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-[#E6F4EA] text-[#0A8543] flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">
+                    Learning Analytics
+                  </h4>
+                  <p className="text-xs text-[#555555] leading-relaxed">
+                    Track your curriculum milestones, assessment attempt scores, and overall learning rate.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0056D2] pt-4 mt-2 border-t border-[#F0F2F5] group-hover:translate-x-1 transition-transform">
+                  <span>Track Progress</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchTab('notifications')}
+                className="bg-white border border-[#D1D7DC] hover:border-[#0056D2] hover:shadow-md rounded-xl p-5 shadow-xs transition-all cursor-pointer text-left flex flex-col justify-between group h-full"
+              >
+                <div className="space-y-2.5">
+                  <div className="w-10 h-10 rounded-lg bg-[#FFF4E5] text-[#B76E00] flex items-center justify-center relative">
+                    <Bell className="w-5 h-5" />
+                    {unreadNotifsCount > 0 && <span className="w-2.5 h-2.5 rounded-full bg-red-600 absolute top-1 right-1" />}
+                  </div>
+                  <h4 className="text-sm font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors">
+                    Personalized Notifications
+                  </h4>
+                  <p className="text-xs text-[#555555] leading-relaxed">
+                    Stay updated on new course assignments, assessment results, and earned certificates.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-[#0056D2] pt-4 mt-2 border-t border-[#F0F2F5] group-hover:translate-x-1 transition-transform">
+                  <span>Open Notifications</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
             </div>
           </div>
         )}
