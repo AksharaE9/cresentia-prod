@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -286,6 +286,50 @@ const StudentDashboardPage = ({ defaultTab = 'overview' }) => {
                 <div className="flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-wider text-[#555555]">Avg. Grade</span><TrendingUp className="w-4 h-4 text-[#0A8543]" /></div>
                 <div className="mt-2 text-2xl font-black text-[#1F1F1F]">{averageGrade > 0 ? `${averageGrade}%` : 'N/A'}</div>
                 <div className="text-[11px] text-[#6A6F73] mt-1 group-hover:text-[#0056D2] transition-colors">Assessment history</div>
+              </div>
+            </div>
+
+            {/* Weekly Learning Goal & Streak Widget (Coursera-Grade) */}
+            <div className="bg-white border border-[#D1D7DC] rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-[#FFF4E5] border border-[#FFE0B2] text-[#B76E00] flex items-center justify-center font-black text-xl shrink-0">
+                  🔥
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-[#1F1F1F]">Weekly Learning Goal</h3>
+                    <span className="text-[10px] bg-[#E6F4EA] text-[#0A8543] font-bold px-2 py-0.5 rounded-full">
+                      3 Day Streak!
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#6A6F73] mt-0.5">
+                    Target: Complete lessons 3 days a week to stay on track for your certified credential.
+                  </p>
+                </div>
+              </div>
+
+              {/* Weekday Circles */}
+              <div className="flex items-center gap-2 shrink-0">
+                {[
+                  { day: 'M', active: true },
+                  { day: 'T', active: true },
+                  { day: 'W', active: true },
+                  { day: 'T', active: false },
+                  { day: 'F', active: false },
+                  { day: 'S', active: false },
+                  { day: 'S', active: false }
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-8 h-8 rounded-full text-xs font-bold flex items-center justify-center transition-colors ${
+                      item.active
+                        ? 'bg-[#0056D2] text-white shadow-2xs'
+                        : 'bg-[#F0F2F5] text-[#757575] border border-[#E0E0E0]'
+                    }`}
+                  >
+                    {item.day}
+                  </div>
+                ))}
               </div>
             </div>
 

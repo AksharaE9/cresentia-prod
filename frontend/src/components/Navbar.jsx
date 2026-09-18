@@ -31,6 +31,43 @@ const Navbar = () => {
   const searchRef = useRef(null);
   const debounceTimerRef = useRef(null);
 
+  // Explore Megamenu state
+  const [showExploreMenu, setShowExploreMenu] = useState(false);
+  const exploreRef = useRef(null);
+
+  const exploreCategories = [
+    {
+      title: 'Web Development',
+      slug: 'Web Development',
+      topics: ['React', 'JavaScript', 'Node.js', 'Frontend Architecture', 'Full Stack']
+    },
+    {
+      title: 'Data Science & AI',
+      slug: 'Data Science',
+      topics: ['Python', 'Machine Learning', 'Data Analysis', 'Deep Learning', 'SQL']
+    },
+    {
+      title: 'Cloud & DevOps',
+      slug: 'Cloud & DevOps',
+      topics: ['AWS', 'Docker', 'Kubernetes', 'CI/CD Pipelines', 'Linux']
+    },
+    {
+      title: 'Cybersecurity',
+      slug: 'Cybersecurity',
+      topics: ['Ethical Hacking', 'Network Security', 'SOC Operations', 'Penetration Testing']
+    },
+    {
+      title: 'Mobile Development',
+      slug: 'Mobile Development',
+      topics: ['Flutter', 'React Native', 'Android', 'iOS Swift']
+    },
+    {
+      title: 'Business & Management',
+      slug: 'Business Analysis',
+      topics: ['Agile & Scrum', 'Product Management', 'Project Management', 'Data Visualization']
+    }
+  ];
+
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
@@ -98,11 +135,14 @@ const Navbar = () => {
     }
   }, [location.pathname, location.search]);
 
-  // Click outside listener to close search dropdown
+  // Click outside listener to close search dropdown & explore megamenu
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setShowSearchDropdown(false);
+      }
+      if (exploreRef.current && !exploreRef.current.contains(e.target)) {
+        setShowExploreMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -211,14 +251,101 @@ const Navbar = () => {
             <span>crescentia</span>
           </Link>
 
-          <div className="hidden lg:flex items-center">
-            <Link
-              to="/courses"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded border border-[#0056D2] text-[#0056D2] bg-white hover:bg-[#EBF3FF] text-sm font-bold no-underline transition-colors"
+          <div ref={exploreRef} className="hidden lg:flex items-center relative">
+            <button
+              type="button"
+              onClick={() => setShowExploreMenu(!showExploreMenu)}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded border text-sm font-bold no-underline transition-colors cursor-pointer ${
+                showExploreMenu
+                  ? 'border-[#0056D2] text-white bg-[#0056D2]'
+                  : 'border-[#0056D2] text-[#0056D2] bg-white hover:bg-[#EBF3FF]'
+              }`}
             >
               <span>Explore</span>
-              <ChevronDown className="w-4 h-4" />
-            </Link>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showExploreMenu ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Coursera-Style Megamenu Dropdown */}
+            {showExploreMenu && (
+              <div className="absolute top-full left-0 mt-2 w-[680px] bg-white border border-[#D1D7DC] rounded-2xl shadow-xl z-50 p-6 grid grid-cols-12 gap-6 text-left">
+                {/* Left 5 Cols: Categories */}
+                <div className="col-span-5 border-r border-[#E0E0E0] pr-4 space-y-1">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] px-3 pb-2">
+                    Subject Areas
+                  </div>
+                  {exploreCategories.map((cat, cIdx) => (
+                    <button
+                      key={cIdx}
+                      type="button"
+                      onClick={() => {
+                        setShowExploreMenu(false);
+                        navigate(`/courses?category=${encodeURIComponent(cat.slug)}`);
+                      }}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-bold text-[#1F1F1F] hover:text-[#0056D2] hover:bg-[#F8F9FA] flex items-center justify-between transition-colors text-left cursor-pointer border-none bg-transparent"
+                    >
+                      <span>{cat.title}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#9CA3AF]" />
+                    </button>
+                  ))}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExploreMenu(false);
+                        navigate('/courses');
+                      }}
+                      className="w-full px-3 py-2 rounded-lg text-xs font-bold text-[#0056D2] bg-[#EBF3FF] hover:bg-[#D4E8FF] flex items-center justify-between transition-colors text-left cursor-pointer border-none"
+                    >
+                      <span>Browse All Courses</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right 7 Cols: Popular Skills & Fast Credentials */}
+                <div className="col-span-7 space-y-4">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] pb-2">
+                      Popular Skills & Technologies
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['React', 'Python', 'AWS Cloud', 'Docker', 'Machine Learning', 'Cybersecurity', 'SQL', 'Flutter', 'TypeScript', 'Node.js'].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            setShowExploreMenu(false);
+                            navigate(`/courses?q=${encodeURIComponent(tag)}`);
+                          }}
+                          className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#1F1F1F] bg-[#F8F9FA] hover:bg-[#0056D2] hover:text-white border border-[#D1D7DC] transition-colors cursor-pointer"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#E0E0E0]">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-[#6A6F73] pb-2">
+                      Verified Credentials
+                    </div>
+                    <div
+                      onClick={() => {
+                        setShowExploreMenu(false);
+                        navigate('/courses');
+                      }}
+                      className="p-3 rounded-xl border border-[#D1D7DC] hover:border-[#0056D2] hover:bg-[#F8F9FA] cursor-pointer transition-all flex items-center gap-3 bg-[#FDFDFD]"
+                    >
+                      <Award className="w-5 h-5 text-[#0056D2] shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold text-[#1F1F1F]">Professional Certifications</div>
+                        <div className="text-[11px] text-[#6A6F73]">Earn verifiable credentials with 70%+ score</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
