@@ -27,18 +27,6 @@ const getCourseMeta = (course) => {
     ? Number(course.ratingCount).toLocaleString()
     : counts[seed % counts.length];
 
-  const prices = [
-    { price: '569.00', original: '3,199.00' },
-    { price: '549.00', original: '799.00' },
-    { price: '549.00', original: '799.00' },
-    { price: '569.00', original: '3,199.00' },
-    { price: '499.00', original: '1,999.00' },
-    { price: '599.00', original: '2,499.00' }
-  ];
-  const priceObj = course.price
-    ? { price: Number(course.price).toFixed(2), original: (Number(course.price) * 3).toFixed(2) }
-    : prices[seed % prices.length];
-
   const instructors = [
     'TIA Training, Andrew Ramdayal',
     'Prof. Ryan Ahmed, PhD, MBA, Stemplicity Inc.',
@@ -57,8 +45,6 @@ const getCourseMeta = (course) => {
   return {
     rating,
     ratingCount,
-    price: priceObj.price,
-    originalPrice: priceObj.original,
     instructor,
     fallbackThumb
   };
@@ -135,17 +121,8 @@ const CourseCard = ({ course }) => {
         </div>
       </div>
 
-      {/* Bottom: Price & Add to Cart */}
-      <div className="flex items-center justify-between mt-3 pt-2">
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-base sm:text-lg font-extrabold text-[#1C1D1F]">
-            ₹{meta.price}
-          </span>
-          <span className="text-xs text-[#6A6F73] line-through">
-            ₹{meta.originalPrice}
-          </span>
-        </div>
-
+      {/* Bottom: Add to Cart */}
+      <div className="flex items-center justify-end mt-3 pt-2">
         <button
           type="button"
           onClick={handleAddToCart}
