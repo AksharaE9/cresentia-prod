@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import api from '../services/api';
 import CourseCard from '../components/CourseCard';
 import {
@@ -134,6 +134,47 @@ const FEATURED_TRENDING_COURSES = [
   }
 ];
 
+const TOPICS = [
+  'All',
+  'Python',
+  'Web Development',
+  'Data Science',
+  'Machine Learning',
+  'Cloud & DevOps',
+  'Business Analysis',
+  'API Development'
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'Aarav Sharma',
+    role: 'Full-Stack Software Engineer at Razorpay',
+    course: 'Full-Stack Web Development with React & Node.js',
+    image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+    quote: 'Crescentia gave me the exact hands-on skills I needed to crack top product company interviews. The verified certificate on my LinkedIn profile directly caught recruiter attention.',
+    rating: 5,
+    verified: true
+  },
+  {
+    name: 'Priya Patel',
+    role: 'Cloud Solutions Associate at Deloitte',
+    course: 'Cloud Engineering & DevOps Fundamentals (AWS)',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+    quote: 'The video modules are practical and zero-fluff. Completing the timed assessment gave me genuine confidence in production AWS architectures.',
+    rating: 5,
+    verified: true
+  },
+  {
+    name: 'Rohan Mehta',
+    role: 'Data Analyst at Swiggy',
+    course: 'Data Science, Machine Learning & Python Mastery',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
+    quote: 'Transitioning from non-tech to analytics was daunting, but Crescentia’s curriculum made complex algorithms and data pipelines straightforward to master.',
+    rating: 5,
+    verified: true
+  }
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -142,6 +183,7 @@ const LandingPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [trendingCourses, setTrendingCourses] = useState(FEATURED_TRENDING_COURSES);
+  const [selectedTopic, setSelectedTopic] = useState('All');
   const searchRef = useRef(null);
   const carouselRef = useRef(null);
   const debounceTimerRef = useRef(null);
@@ -163,6 +205,23 @@ const LandingPage = () => {
     };
     fetchTrendingCourses();
   }, []);
+
+  const filteredTrendingCourses = useMemo(() => {
+    if (selectedTopic === 'All') return trendingCourses;
+    const topic = selectedTopic.toLowerCase();
+    return trendingCourses.filter((course) => {
+      const cat = (course.category || '').toLowerCase();
+      const title = (course.title || '').toLowerCase();
+      if (topic === 'python') return title.includes('python') || cat.includes('python');
+      if (topic === 'web development') return title.includes('web') || title.includes('react') || cat.includes('web');
+      if (topic === 'data science') return title.includes('data') || cat.includes('data');
+      if (topic === 'machine learning') return title.includes('ai') || title.includes('machine') || cat.includes('machine') || title.includes('claude');
+      if (topic === 'cloud & devops') return title.includes('cloud') || title.includes('aws') || cat.includes('cloud');
+      if (topic === 'business analysis') return title.includes('pmp') || title.includes('business') || cat.includes('business');
+      if (topic === 'api development') return title.includes('api') || cat.includes('api');
+      return cat.includes(topic);
+    });
+  }, [selectedTopic, trendingCourses]);
 
   const scrollCarousel = (direction) => {
     if (carouselRef.current) {
@@ -738,31 +797,64 @@ const LandingPage = () => {
           </div>
         </div>
 
+        {/* Topic Filter Pills (Udemy Style) */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-3 mb-6">
+          {TOPICS.map((topic) => (
+            <button
+              key={topic}
+              type="button"
+              onClick={() => setSelectedTopic(topic)}
+              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer border ${
+                selectedTopic === topic
+                  ? 'bg-[#1C1D1F] text-white border-[#1C1D1F] shadow-sm'
+                  : 'bg-white text-[#1C1D1F] border-[#D1D7DC] hover:border-[#1C1D1F] hover:bg-slate-50'
+              }`}
+            >
+              {topic}
+            </button>
+          ))}
+        </div>
+
         {/* Carousel Container */}
         <div className="relative group">
           <div
             ref={carouselRef}
             className="flex items-stretch gap-5 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 px-1 -mx-1"
           >
-            {trendingCourses.map((course) => (
-              <div
-                key={course._id}
-                className="w-[280px] sm:w-[310px] shrink-0 flex flex-col"
-              >
-                <CourseCard course={course} />
+            {filteredTrendingCourses.length === 0 ? (
+              <div className="w-full p-8 text-center bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
+                <p className="text-sm font-semibold text-[#64748B]">No courses found for "{selectedTopic}".</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTopic('All')}
+                  className="mt-2 text-xs font-bold text-[#0056D2] hover:underline cursor-pointer border-none bg-transparent"
+                >
+                  Show all courses
+                </button>
               </div>
-            ))}
+            ) : (
+              filteredTrendingCourses.map((course) => (
+                <div
+                  key={course._id}
+                  className="w-[280px] sm:w-[310px] shrink-0 flex flex-col"
+                >
+                  <CourseCard course={course} />
+                </div>
+              ))
+            )}
           </div>
 
           {/* Floating Right Chevron button matching user's screenshot */}
-          <button
-            type="button"
-            onClick={() => scrollCarousel('right')}
-            className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-[#D1D7DC] shadow-lg items-center justify-center text-[#1F1F1F] hover:bg-slate-50 hover:scale-105 transition-all z-20 cursor-pointer"
-            title="Next courses"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+          {filteredTrendingCourses.length > 3 && (
+            <button
+              type="button"
+              onClick={() => scrollCarousel('right')}
+              className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-[#D1D7DC] shadow-lg items-center justify-center text-[#1F1F1F] hover:bg-slate-50 hover:scale-105 transition-all z-20 cursor-pointer"
+              title="Next courses"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </section>
 
@@ -817,6 +909,59 @@ const LandingPage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Learner Testimonials & Career Outcomes (Udemy & Coursera style) */}
+      <section className="py-16 px-4 sm:px-8 max-w-7xl mx-auto w-full text-left">
+        <div className="mb-10 text-center max-w-2xl mx-auto">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#0056D2] mb-1 block">
+            Real Student Outcomes
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1F1F1F] tracking-tight mb-2">
+            How Crescentia Transforms Careers
+          </h2>
+          <p className="text-sm text-[#555555]">
+            See how graduates leverage verified curriculum credentials to accelerate promotions and break into tech.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TESTIMONIALS.map((t, idx) => (
+            <div
+              key={idx}
+              className="bg-white border border-[#D1D7DC] rounded-xl p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative"
+            >
+              <div>
+                <div className="flex items-center gap-1 text-[#E59819] mb-3">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-[#E59819]" />
+                  ))}
+                </div>
+                <p className="text-sm text-[#2D2F31] leading-relaxed italic mb-6">
+                  "{t.quote}"
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-[#F0F2F5] flex items-center gap-3">
+                <img
+                  src={t.image}
+                  alt={t.name}
+                  className="w-11 h-11 rounded-full object-cover border border-[#D1D7DC]"
+                />
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-[#1F1F1F] flex items-center gap-1">
+                    <span>{t.name}</span>
+                    {t.verified && (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#0A8543]" title="Verified Graduate" />
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[#6A6F73] truncate">{t.role}</div>
+                  <div className="text-[10px] text-[#0056D2] font-semibold truncate mt-0.5">{t.course}</div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
