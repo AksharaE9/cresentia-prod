@@ -298,14 +298,7 @@ const LandingPage = () => {
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState('');
 
-  // Redirect authenticated users to their dashboard
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') navigate('/admin');
-      else if (user.role === 'instructor') navigate('/instructor');
-      else navigate('/dashboard');
-    }
-  }, [user, navigate]);
+
 
   const handleGetStarted = () => {
     navigate('/register');
@@ -371,8 +364,9 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#1F1F1F] font-sans flex flex-col selection:bg-[#EBF3FF] selection:text-[#0056D2]">
-      {/* Coursera-style Clean Header */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-[#D1D7DC]">
+      {/* Coursera-style Clean Header (Guest only; authenticated users use app Navbar) */}
+      {!user && (
+        <nav className="sticky top-0 z-50 bg-white border-b border-[#D1D7DC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-6">
           {/* Logo & Explore */}
           <div className="flex items-center gap-4 shrink-0">
@@ -553,6 +547,7 @@ const LandingPage = () => {
           </div>
         </div>
       </nav>
+      )}
 
       {/* Hero */}
       <header className="relative bg-white border-b border-[#E0E0E0] py-14 sm:py-20 px-6 sm:px-10 overflow-hidden">
@@ -572,8 +567,17 @@ const LandingPage = () => {
           {/* Left copy */}
           <div className="flex-1 text-left">
             <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-extrabold text-[#1F1F1F] leading-[1.12] tracking-tight mb-5">
-              Advance your career<br />
-              with <span className="text-[#0056D2]">Crescentia</span>
+              {user ? (
+                <>
+                  Welcome back, <span className="text-[#0056D2]">{user.name?.split(' ')[0] || 'Learner'}</span>!<br />
+                  What will you learn today?
+                </>
+              ) : (
+                <>
+                  Advance your career<br />
+                  with <span className="text-[#0056D2]">Crescentia</span>
+                </>
+              )}
             </h1>
 
             <p className="text-base sm:text-lg text-[#555] leading-relaxed mb-8 max-w-lg">
@@ -581,12 +585,26 @@ const LandingPage = () => {
             </p>
 
             <div className="flex flex-wrap items-center gap-3 mb-7">
-              <button onClick={handleGetStarted} className="coursera-btn-primary">
-                Get Started
-              </button>
-              <button onClick={handleExploreCourses} className="coursera-btn-secondary">
-                Explore Courses
-              </button>
+              {user ? (
+                <>
+                  <button onClick={() => navigate('/dashboard')} className="coursera-btn-primary flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Go to My Dashboard</span>
+                  </button>
+                  <button onClick={handleExploreCourses} className="coursera-btn-secondary">
+                    Explore Catalog
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={handleGetStarted} className="coursera-btn-primary">
+                    Get Started
+                  </button>
+                  <button onClick={handleExploreCourses} className="coursera-btn-secondary">
+                    Explore Courses
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#6A6F73]">

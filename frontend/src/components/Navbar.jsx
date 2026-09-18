@@ -245,7 +245,7 @@ const Navbar = () => {
         {/* Left Branding & Explore */}
         <div className="flex items-center gap-5">
           <Link
-            to={user ? (user.role === 'admin' || user.role === 'instructor' ? '/admin' : '/dashboard') : '/'}
+            to="/"
             className="flex items-center gap-1 text-2xl font-black tracking-tight text-[#0056D2] hover:opacity-90 no-underline"
           >
             <span>crescentia</span>

@@ -27,17 +27,6 @@ const ProtectedRoute = ({ children, roles }) => {
   return children;
 };
 
-const RoleBasedRedirect = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) return <div className="container">Loading...</div>;
-  if (!user) return <LandingPage />;
-  if (user.role === 'admin' || user.role === 'instructor') {
-    return <Navigate to="/admin" replace />;
-  }
-  return <Navigate to="/dashboard" replace />;
-};
-
 function App() {
   const { user } = useAuth();
   const showNavbar =
@@ -48,7 +37,7 @@ function App() {
     <>
       {showNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<RoleBasedRedirect />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
