@@ -29,9 +29,13 @@ const ProtectedRoute = ({ children, roles }) => {
 
 function App() {
   const { user } = useAuth();
-  const showNavbar =
-    (Boolean(user) || location.pathname === '/courses') &&
-    location.pathname !== '/admin';
+  const location = useLocation();
+  const hideNavbar =
+    location.pathname === '/admin' ||
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/verify-email';
+  const showNavbar = !hideNavbar;
 
   return (
     <>
