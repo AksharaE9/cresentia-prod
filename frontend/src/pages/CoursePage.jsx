@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Download,
   Info,
-  ChevronLeft
+  ChevronLeft,
+  Star
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -374,6 +375,139 @@ const CoursePage = () => {
                 )}
               </div>
             </div>
+
+            {/* What You'll Learn Box (Udemy & Coursera Style) */}
+            <div className="bg-[#F8F9FB] border border-[#D1D7DC] rounded-xl p-6 shadow-xs text-left">
+              <h3 className="text-base font-bold text-[#1F1F1F] mb-4">
+                What you'll learn
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs text-[#2D2F31]">
+                <div className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#0A8543] shrink-0 mt-0.5" />
+                  <span>Master core concepts and industry architectures in {course.category || 'this subject'}.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#0A8543] shrink-0 mt-0.5" />
+                  <span>Hands-on implementation of production-ready patterns and workflows.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#0A8543] shrink-0 mt-0.5" />
+                  <span>Industry-standard debugging, error handling, and performance tuning.</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <Check className="w-4 h-4 text-[#0A8543] shrink-0 mt-0.5" />
+                  <span>Prepare for the verified certification exam to earn accredited digital credentials.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Instructor Profile Card */}
+            <div className="bg-white border border-[#D1D7DC] rounded-xl p-6 shadow-xs text-left">
+              <h3 className="text-base font-bold text-[#1F1F1F] mb-4">Instructor</h3>
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-full bg-[#EBF3FF] border border-[#C2DCFF] text-[#0056D2] font-black text-xl flex items-center justify-center shrink-0">
+                  {(course.instructorName || 'Crescentia Faculty').charAt(0)}
+                </div>
+                <div className="space-y-1">
+                  <div className="font-bold text-sm text-[#1F1F1F] flex items-center gap-2">
+                    <span>{course.instructorName || 'Crescentia Senior Faculty'}</span>
+                    <span className="text-[10px] bg-[#E6F4EA] text-[#0A8543] font-bold px-1.5 py-0.5 rounded">
+                      Verified Instructor
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#6A6F73]">Curriculum Architect & Senior Industry Practitioner</p>
+                  <div className="flex items-center gap-4 text-xs text-[#555555] pt-2">
+                    <span className="flex items-center gap-1 font-bold text-[#B4690E]">
+                      <Star className="w-3.5 h-3.5 fill-[#E59819] text-[#E59819]" />
+                      4.8 Instructor Rating
+                    </span>
+                    <span>•</span>
+                    <span>12,450+ Learners</span>
+                    <span>•</span>
+                    <span>{course.level || 'Beginner'} to Advanced</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Student Feedback & Ratings Breakdown (Udemy Style) */}
+            <div className="bg-white border border-[#D1D7DC] rounded-xl p-6 shadow-xs text-left space-y-6">
+              <h3 className="text-base font-bold text-[#1F1F1F]">Student Feedback</h3>
+
+              <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-[#F0F2F5]">
+                {/* Score */}
+                <div className="text-center sm:text-left shrink-0">
+                  <div className="text-5xl font-black text-[#B4690E]">4.8</div>
+                  <div className="flex items-center justify-center sm:justify-start gap-1 text-[#E59819] my-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-[#E59819]" />
+                    ))}
+                  </div>
+                  <div className="text-xs font-bold text-[#6A6F73]">Course Rating</div>
+                </div>
+
+                {/* Star Distribution Bars */}
+                <div className="flex-1 w-full space-y-2 text-xs">
+                  {[
+                    { stars: 5, pct: 82 },
+                    { stars: 4, pct: 12 },
+                    { stars: 3, pct: 4 },
+                    { stars: 2, pct: 1 },
+                    { stars: 1, pct: 1 }
+                  ].map((item) => (
+                    <div key={item.stars} className="flex items-center gap-3">
+                      <div className="w-12 text-right font-medium text-[#555555]">{item.stars} stars</div>
+                      <div className="flex-1 h-2 bg-[#F0F2F5] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#E59819] rounded-full"
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      </div>
+                      <div className="w-8 text-xs text-[#6A6F73] font-semibold">{item.pct}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sample Verified Reviews */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#6A6F73]">Verified Learner Reviews</h4>
+
+                <div className="p-4 bg-[#F8F9FA] rounded-lg border border-[#E0E0E0] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-xs text-[#1F1F1F] flex items-center gap-1.5">
+                      <span>Ananya S.</span>
+                      <span className="text-[10px] text-[#0A8543] font-bold">Verified Graduate</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 text-[#E59819]">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-[#E59819]" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-[#555555] leading-relaxed">
+                    "Exceptionally well structured. The bite-sized video lessons made it easy to learn every evening after work, and the final quiz tested genuine understanding."
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#F8F9FA] rounded-lg border border-[#E0E0E0] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-xs text-[#1F1F1F] flex items-center gap-1.5">
+                      <span>Vikram K.</span>
+                      <span className="text-[10px] text-[#0A8543] font-bold">Verified Graduate</span>
+                    </div>
+                    <div className="flex items-center gap-0.5 text-[#E59819]">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-3 h-3 fill-[#E59819]" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-[#555555] leading-relaxed">
+                    "The curriculum covers practical implementations that are directly applicable in production. Being able to download the verified certificate was the cherry on top."
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right 1 Col: Sticky Curriculum Syllabus & Assessment Card */}
@@ -510,6 +644,31 @@ const CoursePage = () => {
                 )}
               </div>
             )}
+
+            {/* Course Features / What's Included (Udemy & Coursera style) */}
+            <div className="bg-white border border-[#D1D7DC] rounded-lg p-5 shadow-xs text-left space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#1F1F1F]">
+                This Course Includes
+              </h4>
+              <ul className="space-y-2.5 text-xs text-[#555555]">
+                <li className="flex items-center gap-2">
+                  <PlayCircle className="w-4 h-4 text-[#0056D2]" />
+                  <span>{videos.length} on-demand video lessons</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#0056D2]" />
+                  <span>Verifiable Certificate of Completion</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-[#0056D2]" />
+                  <span>Timed final assessment with instant credential</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#0056D2]" />
+                  <span>Self-paced access on desktop and mobile</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
