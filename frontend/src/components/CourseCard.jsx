@@ -62,12 +62,6 @@ const CourseCard = ({ course }) => {
     navigate(`/courses/${courseId}`);
   };
 
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate(`/courses/${courseId}`);
-  };
-
   return (
     <article
       onClick={handleOpenCourse}
@@ -119,17 +113,6 @@ const CourseCard = ({ course }) => {
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Bottom: Add to Cart */}
-      <div className="flex items-center justify-end mt-3 pt-2">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className="border border-[#A435F0] text-[#A435F0] hover:bg-[#FBF4FE] font-bold text-xs sm:text-[13px] px-3.5 py-1.5 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-        >
-          {isEnrolled ? 'Go to course' : 'Add to cart'}
-        </button>
       </div>
     </article>
   );
