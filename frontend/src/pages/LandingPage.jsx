@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
+import CourseCard from '../components/CourseCard';
 import {
   BookOpen,
   Award,
@@ -14,6 +15,8 @@ import {
   Star,
   Search,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Globe,
   Building2,
   ShieldCheck,
@@ -69,6 +72,75 @@ const SAMPLE_CERTIFICATES = {
   }
 };
 
+const FEATURED_TRENDING_COURSES = [
+  {
+    _id: 'trending-pmp-2026',
+    title: 'PMP Exam Prep Course 35 PDUs/Hours Updated for the 2026 Exam',
+    instructorName: 'TIA Training, Andrew Ramdayal',
+    thumbnail: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.8,
+    ratingCount: 202235,
+    price: 569,
+    category: 'Business Analysis',
+    level: 'All Levels'
+  },
+  {
+    _id: 'trending-claude-code',
+    title: 'The Complete Claude Code & Claude Cowork Masterclass [2026]',
+    instructorName: 'Prof. Ryan Ahmed, PhD, MBA, Stemplicity Inc.',
+    thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.6,
+    ratingCount: 8960,
+    price: 549,
+    category: 'API Development',
+    level: 'Beginner'
+  },
+  {
+    _id: 'trending-ai-coder',
+    title: 'AI Coder: Complete Claude Code & Coding Agents Course',
+    instructorName: 'Ligency , Ed Donner',
+    thumbnail: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.6,
+    ratingCount: 11300,
+    price: 549,
+    category: 'Machine Learning',
+    level: 'Intermediate'
+  },
+  {
+    _id: 'trending-python-bootcamp',
+    title: '100 Days of Code™: The Complete Python Pro Bootcamp',
+    instructorName: 'Dr. Angela Yu, Developer and Lead Instructor',
+    thumbnail: 'https://images.unsplash.com/photo-1526379095098-d400fd0bf935?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.7,
+    ratingCount: 436083,
+    price: 569,
+    category: 'Web Development',
+    level: 'All Levels'
+  },
+  {
+    _id: 'trending-react-fullstack',
+    title: 'Full-Stack Web Development with React, Node.js & Next.js',
+    instructorName: 'Meta Certified Instructors',
+    thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.9,
+    ratingCount: 84210,
+    price: 599,
+    category: 'Web Development',
+    level: 'Intermediate'
+  },
+  {
+    _id: 'trending-data-science',
+    title: 'Data Science, Machine Learning & Python Mastery',
+    instructorName: 'IBM Professional Certifications',
+    thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    ratingAverage: 4.8,
+    ratingCount: 125600,
+    price: 549,
+    category: 'Machine Learning',
+    level: 'Beginner'
+  }
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -76,8 +148,35 @@ const LandingPage = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [trendingCourses, setTrendingCourses] = useState(FEATURED_TRENDING_COURSES);
   const searchRef = useRef(null);
+  const carouselRef = useRef(null);
   const debounceTimerRef = useRef(null);
+
+  useEffect(() => {
+    const fetchTrendingCourses = async () => {
+      try {
+        const { data } = await api.get('/courses');
+        if (Array.isArray(data) && data.length > 0) {
+          const existingIds = new Set(data.map((c) => c._id));
+          const uniqueFeatured = FEATURED_TRENDING_COURSES.filter(
+            (fc) => !existingIds.has(fc._id)
+          );
+          setTrendingCourses([...data, ...uniqueFeatured]);
+        }
+      } catch (err) {
+        // quiet fallback
+      }
+    };
+    fetchTrendingCourses();
+  }, []);
+
+  const scrollCarousel = (direction) => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -340 : 340;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // Real-time search with 200ms debounce
   useEffect(() => {
@@ -600,150 +699,77 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Coursera Course Catalog Section */}
-      <section className="py-16 px-6 sm:px-10 max-w-7xl mx-auto w-full text-left">
-        <div className="mb-10">
-          <span className="text-xs font-bold uppercase tracking-wide text-[#0056D2] mb-1 block">
-            Most Popular Certificates
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1F1F1F] tracking-tight mb-3">
-            Start or Advance Your Career
-          </h2>
-          <p className="text-base text-[#555555]">
-            Explore high-demand tracks with verified credentials and expert instruction.
-          </p>
+      {/* Trending Courses Section */}
+      <section className="py-14 sm:py-18 px-4 sm:px-8 max-w-7xl mx-auto w-full text-left relative">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider bg-[#FFF2EA] text-[#C2410C] px-2.5 py-0.5 rounded-full border border-[#FFD8C4] flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#C2410C]" />
+                Trending Courses
+              </span>
+              <span className="text-xs text-[#6A6F73] font-medium hidden sm:inline">• Top Rated & Enrolled</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#1F1F1F] tracking-tight">
+              Students Are Viewing
+            </h2>
+            <p className="text-sm sm:text-base text-[#555555] mt-1">
+              Top trending programs in high demand across technology, AI, engineering, and leadership.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => scrollCarousel('left')}
+              className="w-10 h-10 rounded-full border border-[#D1D7DC] bg-white hover:bg-slate-50 text-[#1F1F1F] shadow-sm flex items-center justify-center transition-all cursor-pointer"
+              title="Previous courses"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollCarousel('right')}
+              className="w-10 h-10 rounded-full border border-[#D1D7DC] bg-white hover:bg-slate-50 text-[#1F1F1F] shadow-sm flex items-center justify-center transition-all cursor-pointer"
+              title="Next courses"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={handleExploreCourses}
+              className="ml-2 text-sm font-bold text-[#0056D2] hover:text-[#00419E] hover:underline cursor-pointer border-none bg-transparent"
+            >
+              See all courses →
+            </button>
+          </div>
         </div>
 
-        {/* Course Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Coursera Card 1 */}
+        {/* Carousel Container */}
+        <div className="relative group">
           <div
-            className="bg-white border border-[#D1D7DC] rounded-lg overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 group cursor-pointer"
-            onClick={handleGetStarted}
+            ref={carouselRef}
+            className="flex items-stretch gap-5 overflow-x-auto no-scrollbar scroll-smooth pb-4 pt-1 px-1 -mx-1"
           >
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Web Development"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-5 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-[#555555] font-semibold mb-2">
-                  <span className="text-[#0056D2] font-bold">Meta</span>
-                  <span>•</span>
-                  <span>Professional Certificate</span>
-                </div>
-                <h3 className="text-base font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors line-clamp-2 leading-snug mb-2">
-                  Advanced React & Frontend Architecture
-                </h3>
-                <p className="text-xs text-[#555555] line-clamp-2 mb-3">
-                  <strong className="text-[#1F1F1F]">Skills you'll gain:</strong> React.js, State Management, Next.js, Web Performance, Testing
-                </p>
+            {trendingCourses.map((course) => (
+              <div
+                key={course._id}
+                className="w-[280px] sm:w-[310px] shrink-0 flex flex-col"
+              >
+                <CourseCard course={course} />
               </div>
-              <div>
-                <div className="flex items-center gap-2 text-xs mb-3 text-[#555555]">
-                  <div className="flex items-center gap-1 text-[#B4690E] font-bold">
-                    <Star className="w-3.5 h-3.5 fill-[#E59819] text-[#E59819]" />
-                    <span>4.9</span>
-                  </div>
-                  <span>(48 reviews)</span>
-                  <span>•</span>
-                  <span>Beginner</span>
-                </div>
-                <button className="coursera-btn-primary w-full">
-                  Enroll
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Coursera Card 2 */}
-          <div
-            className="bg-white border border-[#D1D7DC] rounded-lg overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 group cursor-pointer"
-            onClick={handleGetStarted}
+          {/* Floating Right Chevron button matching user's screenshot */}
+          <button
+            type="button"
+            onClick={() => scrollCarousel('right')}
+            className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white border border-[#D1D7DC] shadow-lg items-center justify-center text-[#1F1F1F] hover:bg-slate-50 hover:scale-105 transition-all z-20 cursor-pointer"
+            title="Next courses"
           >
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Data Science"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-5 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-[#555555] font-semibold mb-2">
-                  <span className="text-[#0056D2] font-bold">IBM</span>
-                  <span>•</span>
-                  <span>Specialization</span>
-                </div>
-                <h3 className="text-base font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors line-clamp-2 leading-snug mb-2">
-                  Applied Data Science & Machine Learning
-                </h3>
-                <p className="text-xs text-[#555555] line-clamp-2 mb-3">
-                  <strong className="text-[#1F1F1F]">Skills you'll gain:</strong> Python, Data Analysis, SQL, Predictive Analytics, Scikit-learn
-                </p>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-xs mb-3 text-[#555555]">
-                  <div className="flex items-center gap-1 text-[#B4690E] font-bold">
-                    <Star className="w-3.5 h-3.5 fill-[#E59819] text-[#E59819]" />
-                    <span>4.8</span>
-                  </div>
-                  <span>(36 reviews)</span>
-                  <span>•</span>
-                  <span>Intermediate</span>
-                </div>
-                <button className="coursera-btn-primary w-full">
-                  Enroll
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Coursera Card 3 */}
-          <div
-            className="bg-white border border-[#D1D7DC] rounded-lg overflow-hidden flex flex-col hover:shadow-lg transition-all duration-200 group cursor-pointer"
-            onClick={handleGetStarted}
-          >
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
-              <img
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="UI/UX Design"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="p-5 flex-1 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs text-[#555555] font-semibold mb-2">
-                  <span className="text-[#0056D2] font-bold">Google</span>
-                  <span>•</span>
-                  <span>Professional Certificate</span>
-                </div>
-                <h3 className="text-base font-bold text-[#1F1F1F] group-hover:text-[#0056D2] transition-colors line-clamp-2 leading-snug mb-2">
-                  UI/UX Design Specialization & Systems
-                </h3>
-                <p className="text-xs text-[#555555] line-clamp-2 mb-3">
-                  <strong className="text-[#1F1F1F]">Skills you'll gain:</strong> User Experience, Figma, Wireframing, User Research, Prototyping
-                </p>
-              </div>
-              <div>
-                <div className="flex items-center gap-2 text-xs mb-3 text-[#555555]">
-                  <div className="flex items-center gap-1 text-[#B4690E] font-bold">
-                    <Star className="w-3.5 h-3.5 fill-[#E59819] text-[#E59819]" />
-                    <span>4.9</span>
-                  </div>
-                  <span>(52 reviews)</span>
-                  <span>•</span>
-                  <span>Beginner</span>
-                </div>
-                <button className="coursera-btn-primary w-full">
-                  Enroll
-                </button>
-              </div>
-            </div>
-          </div>
+            <ChevronRight className="w-5 h-5" />
+          </button>
         </div>
       </section>
 
