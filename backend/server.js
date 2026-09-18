@@ -13,19 +13,21 @@ console.log(`   PORT: ${PORT}`);
 console.log(`   MONGO_URI: ${process.env.MONGO_URI ? 'Set' : 'Missing'}`);
 console.log(`   JWT_SECRET: ${process.env.JWT_SECRET ? 'Set' : 'Missing'}`);
 
-// Traditional server for local development
+// Traditional server for local development; export app for Vercel serverless
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
-  console.log(err.name, err.message);
-  process.exit(1);
+  console.log(err?.name, err?.message);
 });
 
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
-  console.log(err.name, err.message);
-  process.exit(1);
+  console.log(err?.name, err?.message);
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;

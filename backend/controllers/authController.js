@@ -4,11 +4,18 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'name, email, and password are required' });
+  if (!name || !email || !password || typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Valid name, email, and password strings are required' });
   }
 
-  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanName = name.trim();
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+  }
+
+  const existingUser = await User.findOne({ email: cleanEmail });
   if (existingUser) {
     return res.status(409).json({ message: 'User with this email already exists' });
   }
@@ -16,8 +23,8 @@ const register = asyncHandler(async (req, res) => {
   // All new registrations are regular users by default
   // Admin and instructors must be created by admin
   const user = await User.create({
-    name,
-    email: email.toLowerCase(),
+    name: cleanName,
+    email: cleanEmail,
     password,
     role: 'user',
     isVerified: true
@@ -34,7 +41,7 @@ const register = asyncHandler(async (req, res) => {
 
 const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.query;
-  if (!token) {
+  if (!token || typeof token !== 'string') {
     return res.status(400).json({ message: 'Verification token is required' });
   }
 
@@ -57,19 +64,21 @@ const verifyEmail = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'email and password are required' });
+  if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Valid email and password strings are required' });
   }
 
+  const cleanEmail = email.trim().toLowerCase();
+
   // CRITICAL: Populate assignedCourses with basic course info
-  const user = await User.findOne({ email: email.toLowerCase() })
+  const user = await User.findOne({ email: cleanEmail })
     .populate({
       path: 'assignedCourses',
       select: 'title description category level isPublished'
     });
     
   if (!user || !(await user.matchPassword(password))) {
-    console.log('❌ Login failed for:', email.toLowerCase());
+    console.log('❌ Login failed for:', cleanEmail);
     if (!user) console.log('   Reason: User not found');
     else console.log('   Reason: Password mismatch');
     return res.status(401).json({ message: 'Invalid email or password' });
@@ -110,4 +119,62 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
 
-export { register, verifyEmail, login, me };
+const updateProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const { name } = req.body;
+  if (name && name.trim()) {
+    user.name = name.trim();
+  }
+
+  await user.save();
+
+  res.json({
+    message: 'Profile updated successfully',
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      assignedCourses: user.assignedCourses
+    }
+  });
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Both current and new password are required');
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400);
+    throw new Error('New password must be at least 6 characters');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) {
+    res.status(401);
+    throw new Error('Incorrect current password');
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.json({ message: 'Password updated successfully' });
+});
+
+export { register, verifyEmail, login, me, updateProfile, changePassword };

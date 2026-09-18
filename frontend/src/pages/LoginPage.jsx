@@ -1,134 +1,122 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ArrowRight, ShieldCheck, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     try {
       await login(form.email, form.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] font-sans text-white flex flex-col relative overflow-hidden">
-      {/* Background Gradients */}
-      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[150px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#FF5F1F]/10 rounded-full blur-[120px] pointer-events-none translate-x-1/3 translate-y-1/3"></div>
-      <div className="absolute top-1/2 left-1/2 w-[1000px] h-[500px] bg-purple-900/10 rounded-full blur-[150px] pointer-events-none -translate-x-1/2 -translate-y-1/2"></div>
-
+    <div className="min-h-screen bg-[#F5F7FA] font-sans text-[#1F1F1F] flex flex-col selection:bg-[#EBF3FF] selection:text-[#0056D2]">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5 border-b border-white/5 relative z-20">
-        <Link to="/" className="text-2xl font-bold text-[#FF5F1F] tracking-tight hover:opacity-80 transition-opacity">
-          Crescentia
-        </Link>
-        <div className="flex items-center gap-8">
-          <Link to="/" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
-            Home
+      <header className="bg-white border-b border-[#D1D7DC] px-6 sm:px-10 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link to="/" className="text-2xl font-black text-[#0056D2] tracking-tight no-underline">
+            crescentia
           </Link>
-          <Link to="/register" className="text-gray-400 hover:text-white transition-colors font-medium text-sm">
-            Register
+          <Link
+            to="/register"
+            className="text-sm font-bold text-[#0056D2] hover:text-[#00419E] no-underline"
+          >
+            Get Started
           </Link>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <div className="flex flex-col md:flex-row w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl shadow-black/50 bg-[#1a1a1a] border border-white/5">
-          {/* Left Panel */}
-          <div className="w-full md:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#2A1108] to-[#1a0a05]">
-            {/* Decorative background shape */}
-            <div className="absolute top-0 right-0 w-[120%] h-[150%] bg-[#4A2111] -translate-y-[10%] translate-x-[40%] -rotate-12 origin-top-right pointer-events-none opacity-60" />
-            
-            <div className="relative z-10 p-12 h-full flex flex-col justify-center">
-              <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-white text-[#FF5F1F] text-sm font-bold mb-8 w-max">
-                Crescentia
-              </div>
-              
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 leading-tight">
-                Welcome back.
-              </h1>
-              
-              <p className="text-orange-100/80 text-lg mb-10 leading-relaxed max-w-md">
-                Sign in to continue your learning journey, track progress, and earn certificates that stand out.
-              </p>
-              
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-white font-bold text-base mb-1">Personalized dashboard</h3>
-                  <p className="text-orange-100/70 text-sm">Pick up from where you left off with smart progress tracking.</p>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-base mb-1">Curated paths</h3>
-                  <p className="text-orange-100/70 text-sm">Keep your account details and role-specific access in one place.</p>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-base mb-1">Verified certificates</h3>
-                  <p className="text-orange-100/70 text-sm">Use a streamlined workspace focused on account access only.</p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Main Container */}
+      <main className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md bg-white border border-[#D1D7DC] rounded-lg shadow-sm p-8 sm:p-10 text-left">
+          <h1 className="text-2xl font-bold text-[#1F1F1F] mb-1">
+            Welcome back
+          </h1>
+          <p className="text-xs text-[#555555] mb-6">
+            Log in to continue your courses and access assessments.
+          </p>
 
-          {/* Right Panel */}
-          <div className="w-full md:w-1/2 p-12 flex flex-col justify-center bg-[#18181b]">
-            <h2 className="text-3xl font-extrabold text-white mb-2">Login</h2>
-            <p className="text-gray-400 mb-8">Use your registered email and password.</p>
-            
-            {error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                {error}
+          {error && (
+            <div className="mb-5 p-3.5 rounded bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={submit}>
+            <div>
+              <label className="block text-xs font-bold text-[#1F1F1F] uppercase tracking-wide mb-1.5">
+                Email
+              </label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="name@email.com"
+                className="w-full px-3.5 py-2.5 rounded border border-[#757575] focus:border-[#0056D2] focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 text-sm text-[#1F1F1F] placeholder:text-[#6A6F73]"
+                required
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-[#1F1F1F] uppercase tracking-wide">
+                  Password
+                </label>
               </div>
-            )}
-            
-            <form className="space-y-6" onSubmit={submit}>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Email</label>
+              <div className="relative">
                 <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@company.com"
-                  className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5F1F] transition-all font-medium"
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Password</label>
-                <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl bg-[#f0f4f8] text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5F1F] transition-all font-medium"
+                  placeholder="Enter password"
+                  className="w-full px-3.5 py-2.5 pr-10 rounded border border-[#757575] focus:border-[#0056D2] focus:outline-none focus:ring-2 focus:ring-[#0056D2]/20 text-sm text-[#1F1F1F] placeholder:text-[#6A6F73]"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555555] hover:text-[#1F1F1F] focus:outline-none p-1 bg-transparent border-none cursor-pointer flex items-center justify-center"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4 text-[#555555]" />
+                  ) : (
+                    <Eye className="w-4 h-4 text-[#555555]" />
+                  )}
+                </button>
               </div>
-              
-              <button
-                type="submit"
-                className="w-full py-3.5 rounded-xl bg-[#FF5F1F] hover:bg-[#e6551c] text-white font-bold text-lg transition-all mt-4 shadow-[0_0_15px_rgba(255,95,31,0.3)] hover:shadow-[0_0_25px_rgba(255,95,31,0.5)]"
-              >
-                Login
-              </button>
-            </form>
-            
-            <p className="mt-8 text-gray-400 text-sm text-center">
-              New user?{' '}
-              <Link to="/register" className="text-[#FF5F1F] hover:text-[#e6551c] font-semibold transition-colors">
-                Register
-              </Link>
-            </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded bg-[#0056D2] hover:bg-[#00419E] text-white font-bold text-sm transition-colors mt-2 cursor-pointer border-none shadow-none disabled:opacity-50"
+            >
+              {loading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+
+          <div className="pt-6 mt-6 border-t border-[#E0E0E0] text-center text-xs text-[#555555]">
+            New to Crescentia?{' '}
+            <Link to="/register" className="text-[#0056D2] hover:underline font-bold">
+              Sign up
+            </Link>
           </div>
         </div>
       </main>

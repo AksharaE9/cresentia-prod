@@ -13,37 +13,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setAuthToken(token);
     if (!token) {
       setLoading(false);
       return;
     }
 
+    setAuthToken(token);
+
     api
       .get('/auth/me')
       .then((res) => {
-        setUser(res.data.user);
-        sessionStorage.setItem('user', JSON.stringify(res.data.user));
+        if (res.data?.user) {
+          setUser(res.data.user);
+          sessionStorage.setItem('user', JSON.stringify(res.data.user));
+        }
       })
       .catch((error) => {
-        console.error('Session expired or invalid:', error);
-        // Clear session and redirect to login
-        setToken(null);
-        setUser(null);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        setAuthToken(null);
+        // ONLY clear session if server explicitly returned 401/403 (token is genuinely invalid or expired)
+        const status = error.response?.status;
+        if (status === 401 || status === 403) {
+          console.warn('Session expired or unauthorized. Logging out.');
+          setToken(null);
+          setUser(null);
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          setAuthToken(null);
+        } else {
+          // If cold start, network hiccup, or temporary error, DO NOT kick the user out!
+          console.warn('Backend verification pending or network delay, keeping existing session.');
+        }
       })
       .finally(() => setLoading(false));
   }, [token]);
 
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
-    setToken(data.token);
-    setUser(data.user);
+    setAuthToken(data.token);
     sessionStorage.setItem('token', data.token);
     sessionStorage.setItem('user', JSON.stringify(data.user));
-    setAuthToken(data.token);
+    setToken(data.token);
+    setUser(data.user);
+    setLoading(false);
     return data.user;
   };
 

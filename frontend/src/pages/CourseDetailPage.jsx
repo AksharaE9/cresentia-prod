@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+﻿import { useCallback, useEffect, useState, useMemo } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import QuizTimer from '../components/QuizTimer';
@@ -26,53 +27,53 @@ const CourseDetailPage = () => {
   // Refresh user data on mount to ensure we have latest assigned courses
   useEffect(() => {
     if (user && refreshUser) {
-      console.log('🔄 Refreshing user data to get latest assigned courses...');
+      console.log('ðŸ”„ Refreshing user data to get latest assigned courses...');
       refreshUser();
     }
   }, []);
 
   console.log('\n========================================');
-  console.log('🎯 CourseDetailPage Component Mounted');
+  console.log('ðŸŽ¯ CourseDetailPage Component Mounted');
   console.log('========================================');
-  console.log('📋 Course ID from URL:', id);
-  console.log('📋 ID type:', typeof id);
-  console.log('📋 ID length:', id?.length);
-  console.log('📋 ID value:', JSON.stringify(id));
-  console.log('👤 Current User Email:', user?.email);
-  console.log('👤 Current User Role:', user?.role);
-  console.log('📚 Assigned Courses:', user?.assignedCourses);
-  console.log('📚 Assigned Courses Count:', user?.assignedCourses?.length);
-  console.log('📚 Assigned Course IDs:', user?.assignedCourses?.map(c => typeof c === 'object' ? c._id : c));
-  console.log('🧪 TEST MODE:', TEST_MODE ? '⚠️ ENABLED (bypassing access checks)' : 'DISABLED');
+  console.log('ðŸ“‹ Course ID from URL:', id);
+  console.log('ðŸ“‹ ID type:', typeof id);
+  console.log('ðŸ“‹ ID length:', id?.length);
+  console.log('ðŸ“‹ ID value:', JSON.stringify(id));
+  console.log('ðŸ‘¤ Current User Email:', user?.email);
+  console.log('ðŸ‘¤ Current User Role:', user?.role);
+  console.log('ðŸ“š Assigned Courses:', user?.assignedCourses);
+  console.log('ðŸ“š Assigned Courses Count:', user?.assignedCourses?.length);
+  console.log('ðŸ“š Assigned Course IDs:', user?.assignedCourses?.map(c => typeof c === 'object' ? c._id : c));
+  console.log('ðŸ§ª TEST MODE:', TEST_MODE ? 'âš ï¸ ENABLED (bypassing access checks)' : 'DISABLED');
 
   // Check access for students - but only after course is loaded
   const accessCheck = TEST_MODE ? true : (user && user.role === 'user' ? hasCourseAccess(id) : true);
-  console.log('🔐 Access Check Result:', accessCheck);
+  console.log('ðŸ” Access Check Result:', accessCheck);
   console.log('========================================\n');
 
   const fetchCourse = useCallback(async () => {
     try {
       console.log('\n========================================');
-      console.log('🔄 Fetching Course Data');
+      console.log('ðŸ”„ Fetching Course Data');
       console.log('========================================');
-      console.log('📋 Course ID:', id);
-      console.log('🌐 API URL:', `/courses/${id}`);
-      console.log('🔑 Token exists:', !!sessionStorage.getItem('token'));
+      console.log('ðŸ“‹ Course ID:', id);
+      console.log('ðŸŒ API URL:', `/courses/${id}`);
+      console.log('ðŸ”‘ Token exists:', !!sessionStorage.getItem('token'));
       
       setLoading(true);
       const { data } = await api.get(`/courses/${id}`);
       
-      console.log('✅ Course Data Received');
-      console.log('📖 Course Title:', data.title);
-      console.log('📖 Course ID:', data._id);
-      console.log('📖 Course Published:', data.isPublished);
-      console.log('📖 Course Category:', data.category);
+      console.log('âœ… Course Data Received');
+      console.log('ðŸ“– Course Title:', data.title);
+      console.log('ðŸ“– Course ID:', data._id);
+      console.log('ðŸ“– Course Published:', data.isPublished);
+      console.log('ðŸ“– Course Category:', data.category);
       console.log('========================================\n');
       
       setCourse(data);
     } catch (error) {
       console.log('\n========================================');
-      console.error('❌ Error Fetching Course');
+      console.error('âŒ Error Fetching Course');
       console.log('========================================');
       console.error('Error object:', error);
       console.error('Error message:', error.message);
@@ -125,7 +126,7 @@ const CourseDetailPage = () => {
 
       // Auto-enroll if not enrolled (common for admins/instructors)
       if (!currentEnrollment) {
-        console.log('📝 Auto-enrolling user to track progress...');
+        console.log('ðŸ“ Auto-enrolling user to track progress...');
         const enrollRes = await api.post(`/enrollments/${id}`);
         currentEnrollment = enrollRes.data;
         setEnrollment(currentEnrollment);
@@ -186,7 +187,7 @@ const CourseDetailPage = () => {
       const enrollments = await api.get('/enrollments');
       const found = enrollments.data.find((item) => item.course?._id === id);
       if (found) setEnrollment(found);
-      setMessage(data.passed ? '🎉 Assessment passed!' : 'Assessment submitted. Review your results below.');
+      setMessage(data.passed ? 'ðŸŽ‰ Assessment passed!' : 'Assessment submitted. Review your results below.');
     } catch (err) {
       setMessage(err.response?.data?.message || 'Quiz submission failed');
     }
@@ -244,7 +245,7 @@ const CourseDetailPage = () => {
 
   // Check access AFTER course is loaded
   if (user && user.role === 'user' && !accessCheck) {
-    console.log('🚫 Access denied for course:', course.title);
+    console.log('ðŸš« Access denied for course:', course.title);
     return (
       <main className="container page">
         <div className="card" style={{ 
@@ -253,7 +254,7 @@ const CourseDetailPage = () => {
           border: '2px solid #ef4444',
           background: '#fef2f2'
         }}>
-          <h2 style={{ color: '#dc2626', marginBottom: '16px' }}>🚫 Access Denied</h2>
+          <h2 style={{ color: '#dc2626', marginBottom: '16px' }}>ðŸš« Access Denied</h2>
           <p style={{ fontSize: '18px', marginBottom: '12px' }}>
             You don't have access to: <strong>{course.title}</strong>
           </p>
@@ -282,6 +283,14 @@ const CourseDetailPage = () => {
   return (
     <main className="container page">
       {/* Course Header */}
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 mb-5 px-4 py-2.5 bg-[#EBF3FF] border border-[#C2DCFF] text-[#0056D2] hover:bg-[#D4E8FF] font-bold text-sm rounded-lg transition-colors cursor-pointer"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
       <section className="card course-header-card">
         <div className="course-header-content">
           <div>
@@ -293,9 +302,9 @@ const CourseDetailPage = () => {
                 {course.level}
               </span>
               {course.estimatedDuration && (
-                <span>⏱️ {course.estimatedDuration}h</span>
+                <span>â±ï¸ {course.estimatedDuration}h</span>
               )}
-              <span>⭐ {course.ratingAverage?.toFixed(1) || '0.0'}</span>
+              <span>â­ {course.ratingAverage?.toFixed(1) || '0.0'}</span>
             </div>
             
             {/* Learning Outcomes */}
@@ -304,7 +313,7 @@ const CourseDetailPage = () => {
                 <h4>What you'll learn:</h4>
                 <ul>
                   {course.learningOutcomes.slice(0, 4).map((outcome, idx) => (
-                    <li key={idx}>✓ {outcome}</li>
+                    <li key={idx}>âœ“ {outcome}</li>
                   ))}
                 </ul>
               </div>
@@ -314,7 +323,7 @@ const CourseDetailPage = () => {
             {course.prerequisites && course.prerequisites.length > 0 && (
               <div className="prerequisites">
                 <h4>Prerequisites:</h4>
-                <p>{course.prerequisites.join(' • ')}</p>
+                <p>{course.prerequisites.join(' â€¢ ')}</p>
               </div>
             )}
           </div>
@@ -325,7 +334,7 @@ const CourseDetailPage = () => {
           )}
           {enrollment?.progressPercent === 100 && (
             <button className="primary-btn" type="button" onClick={downloadCertificate}>
-              📄 Download Certificate
+              ðŸ“„ Download Certificate
             </button>
           )}
         </div>
@@ -349,7 +358,7 @@ const CourseDetailPage = () => {
                   onClick={() => isCompleted && setCurrentStep(index)}
                   style={{ cursor: isCompleted ? 'pointer' : 'default' }}
                 >
-                  <div className="step-number">{isCompleted ? '✓' : index + 1}</div>
+                  <div className="step-number">{isCompleted ? 'âœ“' : index + 1}</div>
                   <div className="step-info">
                     <div className="step-title">{module.title}</div>
                     <div className="step-type">{module.type}</div>
@@ -359,7 +368,7 @@ const CourseDetailPage = () => {
             })}
             {hasQuiz && (
               <div className={`module-step ${enrollment?.quizSubmittedAt ? 'completed' : ''} ${allModulesCompleted && !enrollment?.quizSubmittedAt ? 'current' : ''}`}>
-                <div className="step-number">{enrollment?.quizSubmittedAt ? '✓' : modules.length + 1}</div>
+                <div className="step-number">{enrollment?.quizSubmittedAt ? 'âœ“' : modules.length + 1}</div>
                 <div className="step-info">
                   <div className="step-title">Final Assessment</div>
                   <div className="step-type">assessment</div>
@@ -409,7 +418,7 @@ const CourseDetailPage = () => {
           {/* Video Module */}
           {currentModule.type === 'video' && (
             <div className="card video-module">
-              <h2>📹 {currentModule.title}</h2>
+              <h2>ðŸ“¹ {currentModule.title}</h2>
               <p className="muted">Duration: {currentModule.durationMinutes} minutes</p>
               
               <div className="video-player">
@@ -428,17 +437,17 @@ const CourseDetailPage = () => {
               <div className="module-actions">
                 {!isCurrentModuleCompleted && (
                   <button className="primary-btn" onClick={markModuleCompleted} type="button">
-                    Mark as Complete & Continue →
+                    Mark as Complete & Continue â†’
                   </button>
                 )}
                 {isCurrentModuleCompleted && currentStep < modules.length - 1 && (
                   <button className="primary-btn" onClick={() => setCurrentStep(currentStep + 1)} type="button">
-                    Next Module →
+                    Next Module â†’
                   </button>
                 )}
                 {isCurrentModuleCompleted && currentStep === modules.length - 1 && hasQuiz && !enrollment?.quizSubmittedAt && (
                   <button className="primary-btn" onClick={continueToAssessment} type="button">
-                    Continue to Final Assessment →
+                    Continue to Final Assessment â†’
                   </button>
                 )}
               </div>
@@ -460,12 +469,12 @@ const CourseDetailPage = () => {
               <div className="module-actions">
                 {!isCurrentModuleCompleted && (
                   <button className="primary-btn" onClick={markModuleCompleted} type="button">
-                    Mark as Complete & Continue →
+                    Mark as Complete & Continue â†’
                   </button>
                 )}
                 {isCurrentModuleCompleted && currentStep < modules.length - 1 && (
                   <button className="primary-btn" onClick={() => setCurrentStep(currentStep + 1)} type="button">
-                    Next Module →
+                    Next Module â†’
                   </button>
                 )}
               </div>
@@ -477,8 +486,8 @@ const CourseDetailPage = () => {
             <div className="card assessment-module">
               <div className="assessment-header">
                 <div>
-                  <h2>✏️ {currentModule.title}</h2>
-                  <p className="muted">Time Limit: {currentModule.timeLimit} minutes • Passing Score: {currentModule.passingScore || 70}%</p>
+                  <h2>âœï¸ {currentModule.title}</h2>
+                  <p className="muted">Time Limit: {currentModule.timeLimit} minutes â€¢ Passing Score: {currentModule.passingScore || 70}%</p>
                 </div>
                 {enrollment?.averageAssessmentScore > 0 && (
                   <div className="performance-badge">
@@ -530,7 +539,7 @@ const CourseDetailPage = () => {
               
               {quizResult && (
                 <div className={`quiz-result ${quizResult.passed ? 'passed' : 'failed'}`}>
-                  <h3>{quizResult.passed ? '🎉 Congratulations!' : '📝 Review Your Results'}</h3>
+                  <h3>{quizResult.passed ? 'ðŸŽ‰ Congratulations!' : 'ðŸ“ Review Your Results'}</h3>
                   <div className="result-stats">
                     <div className="stat">
                       <span className="stat-label">Score</span>
@@ -557,7 +566,7 @@ const CourseDetailPage = () => {
                         return (
                           <div key={idx} className={`result-item ${result.correct ? 'correct' : 'incorrect'}`}>
                             <div className="result-header">
-                              <span className="result-icon">{result.correct ? '✓' : '✗'}</span>
+                              <span className="result-icon">{result.correct ? 'âœ“' : 'âœ—'}</span>
                               <span className="result-question">Question {result.questionIndex + 1}</span>
                               <span className="result-points">{result.points} pts</span>
                             </div>
@@ -590,7 +599,7 @@ const CourseDetailPage = () => {
                       setAnswers({});
                       setTimerRunning(false);
                     }} type="button">
-                      Continue to Next Module →
+                      Continue to Next Module â†’
                     </button>
                   )}
                   
@@ -613,9 +622,9 @@ const CourseDetailPage = () => {
       {/* Final Assessment (Legacy Quiz) */}
       {canLearn && showAssessment && allModulesCompleted && course.quizQuestions?.length > 0 && (
         <section className="card assessment-module">
-          <h2>✏️ Final Assessment</h2>
+          <h2>âœï¸ Final Assessment</h2>
           <p className="muted">Complete this assessment to finish the course</p>
-          <p className="warning-text">⚠️ You cannot go back once you start the assessment</p>
+          <p className="warning-text">âš ï¸ You cannot go back once you start the assessment</p>
           
           <QuizTimer durationMinutes={15} onTimeout={submitQuiz} isRunning={timerRunning} />
           
@@ -644,7 +653,7 @@ const CourseDetailPage = () => {
           {quizResult && (
             <div className="quiz-result">
               <p className="success">Score: {quizResult.score}%</p>
-              {quizResult.score >= 70 && <p className="success">🎉 Congratulations! You passed the course!</p>}
+              {quizResult.score >= 70 && <p className="success">ðŸŽ‰ Congratulations! You passed the course!</p>}
             </div>
           )}
         </section>
@@ -680,7 +689,7 @@ const CourseDetailPage = () => {
             <div key={item._id} className="review-block">
               <div className="review-header">
                 <strong>{item.name}</strong>
-                <span className="review-rating">{'⭐'.repeat(item.rating)}</span>
+                <span className="review-rating">{'â­'.repeat(item.rating)}</span>
               </div>
               <p>{item.comment}</p>
               <span className="review-date">{new Date(item.createdAt).toLocaleDateString()}</span>
@@ -699,7 +708,7 @@ const CourseDetailPage = () => {
               >
                 {[5, 4, 3, 2, 1].map((r) => (
                   <option key={r} value={r}>
-                    {'⭐'.repeat(r)} ({r}/5)
+                    {'â­'.repeat(r)} ({r}/5)
                   </option>
                 ))}
               </select>

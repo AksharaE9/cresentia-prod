@@ -1,7 +1,9 @@
 import PDFDocument from 'pdfkit';
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
+import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { createStudentNotification } from './notificationController.js';
 
 const calculateProgress = (course, enrollment) => {
   // New module-based calculation
@@ -35,16 +37,15 @@ const enrollCourse = asyncHandler(async (req, res) => {
       res.status(403);
       throw new Error('You can only access courses you created.');
     }
-  } else if (req.user.role === 'user') {
-    const hasAccess = req.user.assignedCourses.some(
-      id => id.toString() === course._id.toString()
-    );
-    
-    if (!hasAccess) {
-      res.status(403);
-      throw new Error('You do not have access to this course. Please contact an administrator.');
-    }
+  } else if (!course.isPublished && req.user.role !== 'admin') {
+    res.status(403);
+    throw new Error('This course is not yet published.');
   }
+
+  // Ensure course is in student's assignedCourses
+  await User.findByIdAndUpdate(req.user._id, {
+    $addToSet: { assignedCourses: course._id }
+  });
 
   let enrollment = await Enrollment.findOne({
     student: req.user._id,
@@ -259,6 +260,25 @@ const submitQuiz = asyncHandler(async (req, res) => {
   }
 
   await enrollment.save();
+
+  // Create personalized notification for student
+  if (percentage >= 70) {
+    await createStudentNotification({
+      recipient: req.user._id,
+      title: '🎉 Assessment Passed & Certificate Unlocked!',
+      message: `Congratulations! You scored ${percentage}% on "${course.title}". Your official Certificate of Completion is now ready to download.`,
+      type: 'certificate_earned',
+      link: '/certificates'
+    });
+  } else {
+    await createStudentNotification({
+      recipient: req.user._id,
+      title: 'Assessment Attempt Recorded',
+      message: `You scored ${percentage}% on "${course.title}". You need 70% to earn your certificate. Review the curriculum lessons and try again!`,
+      type: 'reminder',
+      link: `/courses/${course._id}/assessment`
+    });
+  }
 
   res.json({
     message: 'Quiz submitted',
