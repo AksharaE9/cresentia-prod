@@ -1,14 +1,24 @@
 import axios from 'axios';
 
-let baseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim();
+const getBaseUrl = () => {
+  const envUrl = (import.meta.env.VITE_API_URL || '').trim();
 
-// Automatically append /api suffix if not already present
-if (baseUrl && !baseUrl.endsWith('/api') && !baseUrl.endsWith('/api/')) {
-  baseUrl = `${baseUrl.replace(/\/$/, '')}/api`;
-}
+  // If running locally in a browser on localhost or 127.0.0.1
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    if (!envUrl || envUrl.includes('vercel.app') || envUrl.includes('onrender.com')) {
+      return 'http://localhost:5000/api';
+    }
+  }
+
+  let url = envUrl || 'http://localhost:5000/api';
+  if (url && !url.endsWith('/api') && !url.endsWith('/api/')) {
+    url = `${url.replace(/\/$/, '')}/api`;
+  }
+  return url;
+};
 
 const api = axios.create({
-  baseURL: baseUrl,
+  baseURL: getBaseUrl(),
   timeout: 25000
 });
 

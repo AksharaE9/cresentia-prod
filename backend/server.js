@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 
 console.log('✅ Environment loaded');
 console.log(`   PORT: ${PORT}`);
-console.log(`   MONGO_URI: ${process.env.MONGO_URI ? 'Set' : 'Missing'}`);
+console.log(`   DATABASE_URL: ${process.env.DATABASE_URL ? 'Set' : 'Missing'}`);
 console.log(`   JWT_SECRET: ${process.env.JWT_SECRET ? 'Set' : 'Missing'}`);
 
 // Traditional server for local development; export app for Vercel serverless

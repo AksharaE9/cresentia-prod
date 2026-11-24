@@ -1,11 +1,10 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
-import connectDB from '../config/db.js';
+import connectDB, { getPool } from '../config/db.js';
 import { courseCatalog } from './courseCatalog.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -22,24 +21,24 @@ const seed = async () => {
     Enrollment.deleteMany({})
   ]);
 
-  const users = await User.create([
-    {
+  const users = [
+    await User.create({
       name: 'Admin User',
       email: 'admin@gmail.com',
       password: 'admin',
       role: 'admin',
       isVerified: true,
       isActive: true
-    },
-    {
+    }),
+    await User.create({
       name: 'Course Manager',
       email: 'instructor@gmail.com',
       password: 'instructor',
       role: 'instructor',
       isVerified: true,
       isActive: true
-    },
-    {
+    }),
+    await User.create({
       name: 'Student User',
       email: 'user@gmail.com',
       password: 'user',
@@ -47,8 +46,8 @@ const seed = async () => {
       isVerified: true,
       isActive: true,
       assignedCourses: []
-    }
-  ]);
+    })
+  ];
 
   const admin = users.find((item) => item.role === 'admin');
   const instructor = users.find((item) => item.role === 'instructor');
@@ -57,14 +56,16 @@ const seed = async () => {
   instructor.createdBy = admin._id;
   await instructor.save();
 
-  const courses = await Course.insertMany(
-    courseCatalog.map((course, index) => ({
-      ...course,
-      durationMinutes: course.videos.reduce((sum, video) => sum + Number(video.durationMinutes || 0), 0),
-      createdBy: index % 2 === 0 ? admin._id : instructor._id,
-      assignedUsers: [learner._id],
-      studentsAssigned: [learner._id]
-    }))
+  const courses = await Promise.all(
+    courseCatalog.map((course, index) =>
+      Course.create({
+        ...course,
+        durationMinutes: course.videos.reduce((sum, video) => sum + Number(video.durationMinutes || 0), 0),
+        createdBy: index % 2 === 0 ? admin._id : instructor._id,
+        assignedUsers: [learner._id],
+        studentsAssigned: [learner._id]
+      })
+    )
   );
 
   learner.assignedCourses = courses.map((course) => course._id);
@@ -90,11 +91,15 @@ const seed = async () => {
   console.log(`Courses created: ${courses.length}`);
   console.log(`Assigned to learner: ${learner.assignedCourses.length}`);
 
-  await mongoose.connection.close();
+  const pool = getPool();
+  await pool.end();
 };
 
 seed().catch(async (error) => {
   console.error(error);
-  await mongoose.connection.close();
+  try {
+    const pool = getPool();
+    await pool.end();
+  } catch (e) {}
   process.exit(1);
 });

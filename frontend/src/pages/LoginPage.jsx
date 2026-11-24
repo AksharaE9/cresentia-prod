@@ -23,7 +23,12 @@ const LoginPage = () => {
       await login(form.email, form.password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password. Please check your credentials.');
+      console.error('Login error:', err);
+      setError(
+        err.response?.data?.message ||
+        (err.message === 'Network Error' ? 'Cannot reach server. Please ensure backend is running.' : err.message) ||
+        'Invalid email or password. Please check your credentials.'
+      );
     } finally {
       setLoading(false);
     }
